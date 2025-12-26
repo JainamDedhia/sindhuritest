@@ -1,80 +1,117 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProductCard from "@/app/components/ProductCard";
-import ProductCardSkeleton from "@/app/components/ProductCardSkeleton";
 
-
-interface ApiProduct{
-  id: number;
+type Product = {
+  id: string;
   name: string;
-  description: string;
   price: string;
-  is_sold_out:boolean;
-  category_name:string;
-  image_url:string;
-}
-
-/* TEMP MOCK DATA */
-const mockProducts = Array.from({ length: 8 }, (_, i) => ({
-  id: i.toString(),
-}));
+  image: string;
+};
 
 export default function ProductsPage() {
-  
-  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try{
-        const res = await fetch('/api/products');
-        if(!res.ok) throw new Error("Failed to Fetch");
-        const data = await res.json();
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
         setProducts(data);
-      }catch(error){
-        console.log("Error Loading products: ", error);
-      }finally{
         setLoading(false);
-      }
-    };
-    fetchProducts();
+      });
   }, []);
 
   return (
-    <>
-    <input type="text" placeholder="Search Products" className="mt-5 bg-white "></input>
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-xl font-bold sm:text-2xl">Our Collection</h1>
+    <div className="container">
+      {/* Header */}
+      <div className="mb-10 text-center">
+        <h1 className="text-3xl font-semibold">
+          Our Jewellery Collection
+        </h1>
+        <p className="text-muted mt-2">
+          Crafted with purity, tradition, and trust
+        </p>
+      </div>
 
-      <section className="py-2">
-        {/* CHANGES HERE:
-           1. grid-cols-2 (Mobile default)
-           2. gap-3 (Smaller gap for mobile)
-           3. sm:gap-6 (Larger gap for desktop)
-        */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-6">
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
-            : products.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  product={{
-                    id: item.id,
-                    title: item.name,
-                    category: item.category_name || "Jewelry",
-                    description: item.description,
-                    price: Number(item.price),
-                    image: item.image_url || "https://placehold.co/400x500",
-                    inStock: !item.is_sold_out,
-                  }}
-                />
-              ))}
+      {/* Loading */}
+      {loading && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="skeleton h-72 rounded-xl"
+            />
+          ))}
         </div>
-      </section>
+      )}
+
+      {/* Products */}
+      {!loading && products.length === 0 && (
+        <div className="text-center text-muted">
+          No products available yet.
+        </div>
+      )}
+
+      {!loading && products.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
-  </>
+  );
+}
+
+/* ---------------- COMPONENT ---------------- */
+
+function ProductCard({ product }: { product: Product }) {
+  return (
+    <div
+      className="bg-white overflow-hidden transition hover:shadow-xl"
+      style={{
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-soft)",
+      }}
+    >
+      {/* Image */}
+      <div className="relative overflow-hidden">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
+        />
+
+        {/* Gold border on hover */}
+        <div
+          className="absolute inset-0 opacity-0 hover:opacity-100 transition"
+          style={{
+            border: "2px solid var(--color-gold-primary)",
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-4 text-center">
+        <h3 className="font-medium text-lg">
+          {product.name}
+        </h3>
+
+        <p className="mt-1 text-sm text-muted">
+          ₹ {product.price}
+        </p>
+
+        <button
+          className="mt-4 px-4 py-2 text-sm rounded-full"
+          style={{
+            border: "1px solid var(--color-gold-primary)",
+            color: "var(--color-gold-primary)",
+          }}
+        >
+          Enquire Now
+        </button>
+      </div>
+    </div>
   );
 }

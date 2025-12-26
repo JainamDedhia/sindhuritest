@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/app/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const { rows } = await pool.query(
-    "SELECT id, name FROM categories WHERE is_active = true ORDER BY name"
-  );
-  return NextResponse.json(rows);
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return NextResponse.json(categories);
+  } catch (error) {
+    console.error("GET CATEGORIES ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: 500 }
+    );
+  }
 }

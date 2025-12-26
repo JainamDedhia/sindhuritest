@@ -1,10 +1,12 @@
-import HeroSection from "./components/HeroSection"
-
 export default function HomePage() {
   return (
     <main className="p-6 space-y-6">
-      <HeroSection />
-      <main/>
+      {/* Hero */}
+      <div className="h-56 bg-gray-300 rounded-lg flex items-center justify-center">
+        <span className="text-gray-700 text-xl font-semibold">
+          Hero Banner (Dummy)
+        </span>
+      </div>
 
       {/* Gold Rate */}
       <div className="bg-gray-200 p-4 rounded-md">
