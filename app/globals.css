@@ -214,3 +214,45 @@ button {
 .border-soft {
   @apply border border-neutral-200;
 }
+<<<<<<< Updated upstream
+=======
+
+
+/*======================Hero Section Banner animation=============== */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+
+/* =======================SKELETON SHIMMERS========================== */
+
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+>>>>>>> Stashed changes
