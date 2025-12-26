@@ -117,97 +117,102 @@ export default function AdminProductUploadPage() {
 
   /* ================= UI ================= */
   return (
-    <section className="w-full flex justify-center">
-      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+  <section className="min-h-screen bg-[var(--color-cream)] py-10">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        {/* HEADER */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-semibold">
-            Product Upload
-          </h1>
-          <p className="mt-2 text-[var(--color-text-secondary)]">
-            Add jewellery products to your catalogue
-          </p>
-        </div>
+      {/* HEADER */}
+      <div className="mb-12">
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)]">
+          Product Upload
+        </h1>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+          Add new jewellery products to your store
+        </p>
+      </div>
 
-        {/* GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* LEFT FORM */}
-          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-8 space-y-6">
+        {/* LEFT – FORM */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-[var(--color-border)] p-8 space-y-8">
 
-            <div>
-              <label className="block text-sm mb-2">
-                Product Name *
-              </label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="22K Gold Ring"
-              />
+          {/* BASIC INFO */}
+          <div>
+            <h2 className="text-lg font-medium mb-4">
+              Product Information
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm mb-1 block">
+                  Product Name *
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="22K Gold Ring"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm mb-1 block">
+                  Price (₹) *
+                </label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="45000"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm mb-2">
+            <div className="mt-6">
+              <label className="text-sm mb-1 block">
                 Description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Handcrafted premium gold ring"
+                placeholder="Handcrafted premium gold jewellery"
                 rows={3}
               />
             </div>
 
-            <div>
-              <label className="block text-sm mb-2">
-                Price (₹) *
-              </label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="45000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2">
+            <div className="mt-6">
+              <label className="text-sm mb-1 block">
                 Category
               </label>
               <select
                 value={categoryId}
-                onChange={(e) =>
-                  setCategoryId(e.target.value)
-                }
+                onChange={(e) => setCategoryId(e.target.value)}
               >
                 <option value="">
                   Select category (optional)
                 </option>
-
-                {categories.length > 0 &&
-                  categories.map((cat) => (
-                    <option
-                      key={cat.id}
-                      value={cat.id}
-                    >
-                      {cat.name}
-                    </option>
-                  ))}
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
+          </div>
 
-            {/* IMAGE UPLOAD */}
+          {/* IMAGE UPLOAD */}
+          <div>
+            <h2 className="text-lg font-medium mb-4">
+              Product Image
+            </h2>
+
             <div
-              className="cursor-pointer border-2 border-dashed
-                         border-[var(--color-border)]
-                         rounded-xl p-8 text-center
+              className="group cursor-pointer rounded-xl border-2 border-dashed
+                         border-[var(--color-border)] bg-[var(--color-ivory)]
+                         p-8 text-center transition
                          hover:border-[var(--color-gold-primary)]
-                         transition"
+                         hover:bg-white"
               onClick={() =>
-                document
-                  .getElementById("imageInput")
-                  ?.click()
+                document.getElementById("imageInput")?.click()
               }
             >
               <input
@@ -223,55 +228,66 @@ export default function AdminProductUploadPage() {
                   }
                 }}
               />
-              <p>
-                Drag & drop or{" "}
-                <span className="text-[var(--color-gold-primary)] font-medium">
-                  browse
-                </span>
-              </p>
-              <p className="text-xs mt-1 text-[var(--color-text-secondary)]">
-                JPG, PNG, WEBP supported
-              </p>
-            </div>
 
+              <div className="space-y-2">
+                <p className="font-medium">
+                  Drag & drop image here
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  or <span className="text-[var(--color-gold-primary)]">browse</span>
+                </p>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  JPG, PNG, WEBP • Optimized via Cloudinary
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ACTION */}
+          <div className="pt-4">
             <button
               onClick={handleUpload}
               disabled={loading}
-              className="btn-primary w-full h-12 text-base"
+              className="w-full h-12 rounded-xl bg-[var(--color-gold-primary)]
+                         text-white font-medium tracking-wide
+                         hover:opacity-90 transition"
             >
-              {loading ? "Uploading..." : "Upload Product"}
+              {loading ? "Uploading…" : "Upload Product"}
             </button>
           </div>
+        </div>
 
-          {/* RIGHT PREVIEW */}
-          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-8">
-            <h2 className="text-lg font-medium mb-4">
-              Image Preview
-            </h2>
+        {/* RIGHT – PREVIEW */}
+        <div className="bg-white rounded-2xl shadow-sm border border-[var(--color-border)] p-6">
+          <h2 className="text-lg font-medium mb-4">
+            Live Preview
+          </h2>
 
-            <div
-              className="aspect-[4/5] rounded-xl border
-                         border-[var(--color-border)]
-                         bg-[var(--color-ivory)]
-                         flex items-center justify-center
-                         overflow-hidden"
-            >
-              {preview ? (
-                <img
-                  src={preview}
-                  className="w-full h-full object-contain"
-                  alt="Preview"
-                />
-              ) : (
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  No image selected
-                </span>
-              )}
-            </div>
+          <div className="aspect-4/5 rounded-xl border border-[var(--color-border)]
+                          bg-[var(--color-ivory)]
+                          flex items-center justify-center overflow-hidden">
+            {preview ? (
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                Image preview will appear here
+              </span>
+            )}
           </div>
 
+          <div className="mt-4 text-xs text-[var(--color-text-secondary)] space-y-1">
+            <p>✔ High-resolution support</p>
+            <p>✔ Cloudinary CDN optimized</p>
+            <p>✔ Secure image storage</p>
+          </div>
         </div>
+
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

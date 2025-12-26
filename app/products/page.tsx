@@ -1,53 +1,80 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ProductCard from "@/app/components/ProductCard";
+import ProductCardSkeleton from "@/app/components/ProductCardSkeleton";
 
-type Product = {
-  id: string;
+
+interface ApiProduct{
+  id: number;
   name: string;
+  description: string;
   price: string;
-  image_url: string;
-};
+  is_sold_out:boolean;
+  category_name:string;
+  image_url:string;
+}
+
+/* TEMP MOCK DATA */
+const mockProducts = Array.from({ length: 8 }, (_, i) => ({
+  id: i.toString(),
+}));
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  fetch("/api/products")
-    .then(async (res) => {
-      if (!res.ok) {
-        console.error("Fetch failed:", res.status);
-        return [];
-      }
-      return res.json();
-    })
-    .then((data) => {
-      if (Array.isArray(data)) {
+    const fetchProducts = async () => {
+      try{
+        const res = await fetch('/api/products');
+        if(!res.ok) throw new Error("Failed to Fetch");
+        const data = await res.json();
         setProducts(data);
-      } else {
-        setProducts([]);
+      }catch(error){
+        console.log("Error Loading products: ", error);
+      }finally{
+        setLoading(false);
       }
-    })
-    .catch((err) => {
-      console.error("Fetch error:", err);
-      setProducts([]);
-    });
-}, []);
-
+    };
+    fetchProducts();
+  }, []);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6">
-      {products.map((p) => (
-        <div key={p.id} className="border rounded-xl p-4">
-          <img
-            src={p.image_url}
-            alt={p.name}
-            className="w-full h-48 object-contain"
-          />
-          <h3 className="mt-2 font-medium">{p.name}</h3>
-          <p className="text-sm">₹{p.price}</p>
+    <>
+    <input type="text" placeholder="Search Products" className="mt-5 bg-white "></input>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="mb-6 text-xl font-bold sm:text-2xl">Our Collection</h1>
+
+      <section className="py-2">
+        {/* CHANGES HERE:
+           1. grid-cols-2 (Mobile default)
+           2. gap-3 (Smaller gap for mobile)
+           3. sm:gap-6 (Larger gap for desktop)
+        */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-6">
+          {loading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))
+            : products.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  product={{
+                    id: item.id,
+                    title: item.name,
+                    category: item.category_name || "Jewelry",
+                    description: item.description,
+                    price: Number(item.price),
+                    image: item.image_url || "https://placehold.co/400x500",
+                    inStock: !item.is_sold_out,
+                  }}
+                />
+              ))}
         </div>
-      ))}
+      </section>
     </div>
+  </>
   );
 }

@@ -2,26 +2,32 @@ import { NextResponse } from "next/server";
 import { pool } from "@/app/lib/db";
 
 /* ================= GET PRODUCTS ================= */
+
 export async function GET() {
   try {
-    const { rows } = await pool.query(`
-      SELECT
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.is_sold_out,
-        p.is_active,
+    // FIXED SQL: Uses a subquery for the image to prevent duplicate rows
+    const query = `
+      SELECT 
+        p.id, 
+        p.name, 
+        p.description, 
+        p.price, 
+        p.is_sold_out, 
+        p.is_active, 
         c.name AS category_name,
-        pi.image_url
+        (
+          SELECT image_url 
+          FROM product_images 
+          WHERE product_id = p.id 
+          LIMIT 1
+        ) AS image_url
       FROM products p
-      LEFT JOIN categories c
-        ON c.id = p.category_id
-      LEFT JOIN product_images pi
-        ON pi.product_id = p.id
+      LEFT JOIN categories c ON c.id = p.category_id
       WHERE p.is_active = true
       ORDER BY p.created_at DESC
-    `);
+    `;
+
+    const { rows } = await pool.query(query);
 
     return NextResponse.json(rows);
   } catch (error) {
