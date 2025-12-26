@@ -1,6 +1,7 @@
 import "./globals.css"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
+import AuthSessionProvider from "./components/SessionProvider"
 
 export default function RootLayout({
   children,
@@ -10,9 +11,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-white text-black">
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <AuthSessionProvider>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </AuthSessionProvider>
       </body>
     </html>
   )
