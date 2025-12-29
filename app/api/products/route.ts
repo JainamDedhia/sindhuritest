@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const GOLD_RATE_PER_GRAM = parseFloat(process.env.GOLD_RATE_PER_GRAM || "7000");
+
 /* ================= GET PRODUCTS ================= */
 export async function GET() {
   try {
@@ -19,21 +21,19 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    // ✅ FIXED: Transform to match frontend expectations
     const transformed = products.map((p) => ({
       id: p.id,
+      product_code: p.productCode,
       name: p.name,
       description: p.description,
-      price: p.price.toString(),
+      weight: p.weight.toString(),
+      calculated_price: (parseFloat(p.weight.toString()) * GOLD_RATE_PER_GRAM).toFixed(0),
       is_sold_out: p.isSoldOut,
       category_name: p.category?.name || null,
-      // ✅ CRITICAL FIX: Correctly access Prisma image format
       image_url: p.images[0]?.imageUrl || null,
     }));
 
     console.log("✅ Products fetched:", transformed.length);
-    console.log("📸 First product image:", transformed[0]?.image_url);
-
     return NextResponse.json(transformed);
   } catch (error) {
     console.error("❌ GET PRODUCTS ERROR:", error);
@@ -50,28 +50,41 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     console.log("📥 Received product data:", {
+      product_code: body.product_code,
       name: body.name,
-      price: body.price,
+      weight: body.weight,
       image_url: body.image_url,
     });
 
-    // ✅ VALIDATION
-    if (!body.name || !body.price || !body.image_url) {
+    // Validation
+    if (!body.product_code || !body.name || !body.weight || !body.image_url) {
       return NextResponse.json(
-        { error: "Missing required fields: name, price, image_url" },
+        { error: "Missing required fields: product_code, name, weight, image_url" },
         { status: 400 }
+      );
+    }
+
+    // Check if product code already exists
+    const existing = await prisma.product.findUnique({
+      where: { productCode: body.product_code },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Product code already exists" },
+        { status: 409 }
       );
     }
 
     const product = await prisma.product.create({
       data: {
+        productCode: body.product_code,
         name: body.name,
         description: body.description || null,
-        price: parseFloat(body.price),
+        weight: parseFloat(body.weight),
         categoryId: body.category_id || null,
         images: {
           create: {
-            // ✅ FIXED: Use correct Prisma field name
             imageUrl: body.image_url,
             position: 0,
           },
@@ -83,8 +96,6 @@ export async function POST(req: Request) {
     });
 
     console.log("✅ Product created:", product.id);
-    console.log("📸 Image saved:", product.images[0]?.imageUrl);
-
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
     console.error("❌ POST PRODUCTS ERROR:", error);

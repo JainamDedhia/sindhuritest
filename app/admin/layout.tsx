@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Product Upload", href: "/admin/products" },
   { label: "Banner Upload", href: "/admin/banners" },
-  { label: "Manage Banners", href: "/admin/banners/manage" }, // ← ADDED
+  { label: "Manage Banners", href: "/admin/banners/manage" },
   { label: "Analytics", href: "/admin/analytics" },
 ];
 
@@ -18,27 +19,71 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check authentication
+  useEffect(() => {
+    if (pathname === "/admin/login") {
+      setLoading(false);
+      return;
+    }
+
+    const adminSession = localStorage.getItem("admin_session");
+    
+    if (!adminSession) {
+      router.push("/admin/login");
+    } else {
+      setIsAuthenticated(true);
+      setLoading(false);
+    }
+  }, [pathname, router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_session");
+    router.push("/admin/login");
+  };
+
+  // Show login page without layout
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  // Show loading
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--color-gold-primary)]" />
+      </div>
+    );
+  }
+
+  // Show protected layout
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-cream)]">
+      
       {/* MOBILE OVERLAY */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed z-50 inset-y-0 left-0 w-64 bg-white border-r
-        border-[var(--color-border)] px-6 py-8
-        transform transition-transform duration-300
-        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform border-r border-[var(--color-border)] bg-white px-6 py-8 transition-transform duration-300 ${
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
         {/* Brand */}
-        <h1 className="text-xl font-semibold mb-10">Admin Panel</h1>
+        <h1 className="mb-10 text-xl font-semibold">Admin Panel</h1>
 
         {/* Nav */}
         <nav className="space-y-1">
@@ -49,12 +94,11 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`block rounded-lg px-4 py-2.5 text-sm transition
-                  ${
-                    active
-                      ? "bg-[var(--color-ivory)] font-medium text-[var(--foreground)]"
-                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-ivory)]"
-                  }`}
+                className={`block rounded-lg px-4 py-2.5 text-sm transition ${
+                  active
+                    ? "bg-[var(--color-ivory)] font-medium text-[var(--foreground)]"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-ivory)]"
+                }`}
                 onClick={() => setOpen(false)}
               >
                 {item.label}
@@ -62,16 +106,26 @@ export default function AdminLayout({
             );
           })}
         </nav>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="mt-8 flex w-full items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
       </aside>
 
       {/* MAIN AREA */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-col lg:pl-64">
+        
         {/* TOP BAR (MOBILE) */}
-        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-[var(--color-border)]">
-          <div className="h-14 px-4 flex items-center justify-between">
+        <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-white lg:hidden">
+          <div className="flex h-14 items-center justify-between px-4">
             <button
               onClick={() => setOpen(true)}
-              className="text-sm px-3 py-2 rounded-md border border-[var(--color-border)]"
+              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm"
             >
               Menu
             </button>
@@ -80,8 +134,8 @@ export default function AdminLayout({
         </header>
 
         {/* CONTENT */}
-        <main className="flex-1 flex justify-center">
-          <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex flex-1 justify-center">
+          <div className="w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>

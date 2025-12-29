@@ -8,9 +8,10 @@ type Category = {
 };
 
 export default function AdminProductUploadPage() {
+  const [productCode, setProductCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [weight, setWeight] = useState(""); // Changed from price
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -20,15 +21,14 @@ export default function AdminProductUploadPage() {
 
   const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
   const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
+  const GOLD_RATE = 7000; // You can make this dynamic later
 
-  // Check if Cloudinary is configured
+  // Calculate estimated price
+  const estimatedPrice = weight ? (parseFloat(weight) * GOLD_RATE).toFixed(0) : "0";
+
   useEffect(() => {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       console.error("❌ Cloudinary not configured!");
-      console.log("CLOUD_NAME:", CLOUD_NAME);
-      console.log("UPLOAD_PRESET:", UPLOAD_PRESET);
-    } else {
-      console.log("✅ Cloudinary configured:", { CLOUD_NAME, UPLOAD_PRESET });
     }
   }, []);
 
@@ -38,41 +38,33 @@ export default function AdminProductUploadPage() {
       .then((data) => {
         if (Array.isArray(data)) {
           setCategories(data);
-        } else {
-          console.error("Categories API error:", data);
-          setCategories([]);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load categories:", err);
-        setCategories([]);
-      });
+      .catch(console.error);
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      console.log("📁 File selected:", {
-        name: selectedFile.name,
-        size: selectedFile.size,
-        type: selectedFile.type,
-      });
-
       setFile(selectedFile);
       const previewUrl = URL.createObjectURL(selectedFile);
       setPreview(previewUrl);
-      console.log("✅ Preview URL created:", previewUrl);
     }
   };
 
   const handleUpload = async () => {
+    if (!productCode.trim()) {
+      alert("Product code is required");
+      return;
+    }
+
     if (!name.trim()) {
       alert("Product name is required");
       return;
     }
 
-    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
-      alert("Valid price is required");
+    if (!weight || isNaN(parseFloat(weight)) || parseFloat(weight) <= 0) {
+      alert("Valid weight is required");
       return;
     }
 
@@ -81,58 +73,40 @@ export default function AdminProductUploadPage() {
       return;
     }
 
-    if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      alert("❌ Cloudinary not configured! Check your .env.local file");
-      return;
-    }
-
     setLoading(true);
     setUploadSuccess(false);
 
     try {
-      console.log("📤 Starting upload to Cloudinary...");
-      console.log("☁️ Cloud name:", CLOUD_NAME);
-      console.log("☁️ Upload preset:", UPLOAD_PRESET);
-
+      // Upload to Cloudinary
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-      console.log("☁️ Uploading to:", cloudinaryUrl);
-
       const cloudRes = await fetch(cloudinaryUrl, {
         method: "POST",
         body: formData,
       });
 
       if (!cloudRes.ok) {
-        const errorText = await cloudRes.text();
-        console.error("❌ Cloudinary error response:", errorText);
         throw new Error(`Cloudinary upload failed: ${cloudRes.status}`);
       }
 
       const cloudData = await cloudRes.json();
-      console.log("☁️ Cloudinary full response:", cloudData);
 
       if (!cloudData.secure_url) {
-        console.error("❌ No secure_url in response:", cloudData);
         throw new Error("Cloudinary upload failed - no URL returned");
       }
 
-      console.log("✅ Image uploaded successfully!");
-      console.log("🔗 Image URL:", cloudData.secure_url);
-      console.log("📏 Image size:", cloudData.width, "x", cloudData.height);
-
-      console.log("💾 Saving to database...");
+      // Save to database
       const dbPayload = {
+        product_code: productCode.trim().toUpperCase(),
         name: name.trim(),
         description: description.trim() || null,
-        price: parseFloat(price),
+        weight: parseFloat(weight),
         category_id: categoryId || null,
         image_url: cloudData.secure_url,
       };
-      console.log("📦 Database payload:", dbPayload);
 
       const res = await fetch("/api/products", {
         method: "POST",
@@ -142,17 +116,14 @@ export default function AdminProductUploadPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        console.error("❌ Database error:", err);
         throw new Error(err.message || "Failed to save product");
       }
 
-      const savedProduct = await res.json();
-      console.log("✅ Product saved:", savedProduct);
-
       // Reset form
+      setProductCode("");
       setName("");
       setDescription("");
-      setPrice("");
+      setWeight("");
       setCategoryId("");
       setFile(null);
       setPreview(null);
@@ -162,7 +133,7 @@ export default function AdminProductUploadPage() {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err: any) {
       console.error("❌ Upload error:", err);
-      alert(`Upload failed: ${err.message}\n\nCheck console for details.`);
+      alert(`Upload failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -176,39 +147,42 @@ export default function AdminProductUploadPage() {
             Product Upload
           </h1>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-            Add new jewellery products to your store
+            Add new jewellery products with weight-based pricing
           </p>
-
-          {/* Cloudinary Config Check */}
-          {(!CLOUD_NAME || !UPLOAD_PRESET) && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 font-medium">
-                ⚠️ Cloudinary is not configured!
-              </p>
-              <p className="text-sm text-red-600 mt-1">
-                Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and
-                NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to your .env.local file
-              </p>
-            </div>
-          )}
         </div>
 
         {uploadSuccess && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <p className="text-green-800 font-medium">
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4">
+            <p className="font-medium text-green-800">
               ✅ Product uploaded successfully!
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-[var(--color-border)] p-8 space-y-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-8 rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-sm lg:col-span-2">
+            
+            {/* Product Code & Name */}
             <div>
-              <h2 className="text-lg font-medium mb-4">Product Information</h2>
+              <h2 className="mb-4 text-lg font-medium">Product Information</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="text-sm mb-1 block font-medium">
+                  <label className="mb-1 block text-sm font-medium">
+                    Product Code * 
+                    <span className="ml-1 text-xs text-gray-500">(e.g., RING-001)</span>
+                  </label>
+                  <input
+                    value={productCode}
+                    onChange={(e) => setProductCode(e.target.value.toUpperCase())}
+                    placeholder="RING-001"
+                    disabled={loading}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-mono uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
                     Product Name *
                   </label>
                   <input
@@ -218,62 +192,69 @@ export default function AdminProductUploadPage() {
                     disabled={loading}
                   />
                 </div>
+              </div>
 
+              {/* Weight & Category */}
+              <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="text-sm mb-1 block font-medium">
-                    Price (₹) *
+                  <label className="mb-1 block text-sm font-medium">
+                    Weight (grams) *
                   </label>
                   <input
                     type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="45000"
+                    step="0.001"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="25.500"
                     disabled={loading}
                   />
+                  {weight && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Estimated: ₹{parseInt(estimatedPrice).toLocaleString()} 
+                      <span className="ml-1">(@ ₹{GOLD_RATE}/g)</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Category
+                  </label>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div className="mt-6">
-                <label className="text-sm mb-1 block font-medium">
+                <label className="mb-1 block text-sm font-medium">
                   Description
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Handcrafted premium gold jewellery"
+                  placeholder="Handcrafted premium gold jewellery..."
                   rows={3}
                   disabled={loading}
                 />
               </div>
-
-              <div className="mt-6">
-                <label className="text-sm mb-1 block font-medium">
-                  Category
-                </label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">Select category (optional)</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
+            {/* Image Upload */}
             <div>
-              <h2 className="text-lg font-medium mb-4">Product Image *</h2>
+              <h2 className="mb-4 text-lg font-medium">Product Image *</h2>
 
               <div
-                className="group cursor-pointer rounded-xl border-2 border-dashed
-                           border-[var(--color-border)] bg-[var(--color-ivory)]
-                           p-8 text-center transition
-                           hover:border-[var(--color-gold-primary)]
-                           hover:bg-white"
+                className="group cursor-pointer rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-ivory)] p-8 text-center transition hover:border-[var(--color-gold-primary)] hover:bg-white"
                 onClick={() =>
                   !loading && document.getElementById("imageInput")?.click()
                 }
@@ -297,9 +278,6 @@ export default function AdminProductUploadPage() {
                       browse
                     </span>
                   </p>
-                  <p className="text-xs text-[var(--color-text-secondary)]">
-                    JPG, PNG, WEBP • Max 10MB
-                  </p>
                 </div>
               </div>
             </div>
@@ -307,16 +285,12 @@ export default function AdminProductUploadPage() {
             <div className="pt-4">
               <button
                 onClick={handleUpload}
-                disabled={loading || !file || !name || !price}
-                className="w-full h-12 rounded-xl bg-[var(--color-gold-primary)]
-                           text-white font-medium tracking-wide
-                           hover:opacity-90 transition
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           flex items-center justify-center gap-2"
+                disabled={loading || !file || !name || !weight || !productCode}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-gold-primary)] font-medium tracking-wide text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Uploading...
                   </>
                 ) : (
@@ -326,57 +300,40 @@ export default function AdminProductUploadPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-[var(--color-border)] p-6">
-            <h2 className="text-lg font-medium mb-4">Live Preview</h2>
+          {/* Preview Panel */}
+          <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-medium">Live Preview</h2>
 
-            <div className="aspect-square rounded-xl border border-[var(--color-border)] bg-[var(--color-ivory)] flex items-center justify-center overflow-hidden">
+            <div className="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-ivory)]">
               {preview ? (
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    console.error("❌ Preview image failed:", preview);
-                  }}
+                  className="h-full w-full object-contain"
                 />
               ) : (
-                <div className="text-center p-4">
-                  <svg
-                    className="w-16 h-16 mx-auto text-gray-300 mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    Select an image
-                  </span>
-                </div>
+                <span className="text-sm text-[var(--color-text-secondary)]">
+                  No image selected
+                </span>
               )}
             </div>
 
-            {(name || price) && (
-              <div className="mt-4 p-4 bg-[var(--color-ivory)] rounded-lg">
-                {name && <p className="font-medium text-sm">{name}</p>}
-                {price && (
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                    ₹ {parseFloat(price).toLocaleString("en-IN")}
-                  </p>
+            {(productCode || name || weight) && (
+              <div className="space-y-2 rounded-lg bg-[var(--color-ivory)] p-4">
+                {productCode && (
+                  <p className="font-mono text-xs text-gray-500">{productCode}</p>
+                )}
+                {name && <p className="text-sm font-medium">{name}</p>}
+                {weight && (
+                  <div className="text-xs text-[var(--color-text-secondary)]">
+                    <p>Weight: {weight}g</p>
+                    <p className="mt-1 font-semibold text-gray-700">
+                      ≈ ₹{parseInt(estimatedPrice).toLocaleString()}
+                    </p>
+                  </div>
                 )}
               </div>
             )}
-
-            <div className="mt-4 text-xs text-[var(--color-text-secondary)] space-y-1">
-              <p>✔ High-resolution support</p>
-              <p>✔ Cloudinary CDN optimized</p>
-              <p>✔ Automatic image compression</p>
-            </div>
           </div>
         </div>
       </div>

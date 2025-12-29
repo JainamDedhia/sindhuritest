@@ -68,9 +68,10 @@ model Category {
 
 model Product {
   id          String         @id @default(cuid())
+  productCode String         @unique @map("product_code") // NEW: Unique product code
   name        String
   description String?
-  price       Decimal        @db.Decimal(10, 2)
+  weight      Decimal        @db.Decimal(10, 3) @map("weight") // CHANGED: From price to weight in grams
   categoryId  String?        @map("category_id")
   isSoldOut   Boolean        @default(false) @map("is_sold_out")
   isActive    Boolean        @default(true) @map("is_active")
@@ -81,6 +82,7 @@ model Product {
 
   @@index([categoryId])
   @@index([isActive, isSoldOut])
+  @@index([productCode]) // NEW: Index for quick lookups
   @@map("products")
 }
 
