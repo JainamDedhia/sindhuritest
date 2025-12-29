@@ -25,27 +25,32 @@ export default function SortableBannerCard({ banner, onDelete }: any) {
       style={style}
       className={`flex items-center gap-4 rounded-xl border bg-white p-4
         transition-shadow duration-150
-        ${isDragging ? "opacity-50" : "hover:shadow-md"}
+        ${isDragging ? "opacity-50 shadow-2xl" : "hover:shadow-md"}
       `}
     >
-      {/* ✅ DRAG HANDLE (THIS FIXES IT) */}
+      {/* DRAG HANDLE */}
       <DragHandle {...attributes} {...listeners} />
 
+      {/* IMAGE PREVIEW */}
       <img
         src={banner.image_url}
         className="h-16 w-28 rounded-lg object-cover border"
+        alt="Banner preview"
       />
 
+      {/* INFO */}
       <div className="flex-1">
-        <p className="text-sm font-medium">Banner</p>
-        <p className="text-xs text-gray-500">
-          Priority #{banner.position}
+        <p className="text-sm font-medium">
+          {banner.device_type === "desktop" ? "Desktop" : "Mobile"} Banner
         </p>
+        <p className="text-xs text-gray-500">Position #{banner.position}</p>
       </div>
 
+      {/* DELETE BUTTON */}
       <button
         onClick={() => onDelete(banner.id)}
-        className="text-sm text-red-500 hover:underline"
+        className="text-sm text-red-500 hover:underline px-3 py-1
+                   rounded hover:bg-red-50 transition"
       >
         Delete
       </button>

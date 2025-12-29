@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Product Upload", href: "/admin/products" },
   { label: "Banner Upload", href: "/admin/banners" },
-  { label: "Manage Banners", href: "/admin/banners/manage"},
+  { label: "Manage Banners", href: "/admin/banners/manage" }, // ← ADDED
   { label: "Analytics", href: "/admin/analytics" },
 ];
 
@@ -22,8 +22,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-cream)]">
-
-      {/* ===== MOBILE OVERLAY ===== */}
+      {/* MOBILE OVERLAY */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
@@ -31,7 +30,7 @@ export default function AdminLayout({
         />
       )}
 
-      {/* ===== SIDEBAR ===== */}
+      {/* SIDEBAR */}
       <aside
         className={`fixed z-50 inset-y-0 left-0 w-64 bg-white border-r
         border-[var(--color-border)] px-6 py-8
@@ -39,9 +38,7 @@ export default function AdminLayout({
         ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Brand */}
-        <h1 className="text-xl font-semibold mb-10">
-          Admin Panel
-        </h1>
+        <h1 className="text-xl font-semibold mb-10">Admin Panel</h1>
 
         {/* Nav */}
         <nav className="space-y-1">
@@ -67,9 +64,8 @@ export default function AdminLayout({
         </nav>
       </aside>
 
-      {/* ===== MAIN AREA ===== */}
+      {/* MAIN AREA */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-
         {/* TOP BAR (MOBILE) */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-[var(--color-border)]">
           <div className="h-14 px-4 flex items-center justify-between">
@@ -79,10 +75,7 @@ export default function AdminLayout({
             >
               Menu
             </button>
-
-            <span className="text-sm font-medium">
-              Admin
-            </span>
+            <span className="text-sm font-medium">Admin</span>
           </div>
         </header>
 

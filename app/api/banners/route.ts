@@ -1,65 +1,121 @@
 import { NextResponse } from "next/server";
-import { pool } from "../../lib/db";
+import { prisma } from "@/lib/prisma";
 
-/* ================= GET ================= */
+/* ================= GET BANNERS ================= */
 export async function GET() {
-  const { rows } = await pool.query(`
-    SELECT id, image_url, device_type, position
-    FROM banners
-    WHERE is_active = true
-    ORDER BY position ASC, created_at ASC
-  `);
+  try {
+    const banners = await prisma.banner.findMany({
+      where: { isActive: true },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+    });
 
-  return NextResponse.json(rows);
-}
+    // Transform to match frontend expectations
+    const transformed = banners.map((b) => ({
+      id: b.id,
+      image_url: b.imageUrl,
+      device_type: b.deviceType,
+      position: b.position,
+    }));
 
-/* ================= POST (UPLOAD SAVE) ================= */
-export async function POST(req: Request) {
-  const { image_url, device_type } = await req.json();
-
-  if (!image_url || !device_type) {
+    console.log("✅ Fetched banners:", transformed.length);
+    return NextResponse.json(transformed);
+  } catch (error) {
+    console.error("❌ GET BANNERS ERROR:", error);
     return NextResponse.json(
-      { error: "Missing data" },
-      { status: 400 }
+      { error: "Failed to fetch banners" },
+      { status: 500 }
     );
   }
-
-  // get next position
-  const { rows } = await pool.query(
-    `SELECT COALESCE(MAX(position), -1) + 1 AS next
-     FROM banners
-     WHERE device_type = $1`,
-    [device_type]
-  );
-
-  await pool.query(
-    `INSERT INTO banners (image_url, device_type, position)
-     VALUES ($1, $2, $3)`,
-    [image_url, device_type, rows[0].next]
-  );
-
-  return NextResponse.json({ success: true });
 }
 
-/* ================= PUT (REORDER) ================= */
+/* ================= POST (UPLOAD NEW BANNER) ================= */
+export async function POST(req: Request) {
+  try {
+    const { image_url, device_type } = await req.json();
+
+    console.log("📥 Creating banner:", { image_url, device_type });
+
+    if (!image_url || !device_type) {
+      return NextResponse.json(
+        { error: "Missing required fields: image_url, device_type" },
+        { status: 400 }
+      );
+    }
+
+    // Get the next position for this device type
+    const maxPosition = await prisma.banner.aggregate({
+      where: { deviceType: device_type },
+      _max: { position: true },
+    });
+
+    const nextPosition = (maxPosition._max.position ?? -1) + 1;
+
+    // Create banner
+    const banner = await prisma.banner.create({
+      data: {
+        imageUrl: image_url,
+        deviceType: device_type,
+        position: nextPosition,
+      },
+    });
+
+    console.log("✅ Banner created:", banner.id);
+    return NextResponse.json({ success: true, banner });
+  } catch (error) {
+    console.error("❌ POST BANNER ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to create banner" },
+      { status: 500 }
+    );
+  }
+}
+
+/* ================= PUT (REORDER BANNERS) ================= */
 export async function PUT(req: Request) {
-  const items = await req.json();
+  try {
+    const items = await req.json();
 
-  for (let i = 0; i < items.length; i++) {
-    await pool.query(
-      `UPDATE banners SET position = $1 WHERE id = $2`,
-      [i, items[i].id]
+    console.log("🔄 Reordering banners:", items.length);
+
+    // Update positions in a transaction
+    await prisma.$transaction(
+      items.map((item: any, index: number) =>
+        prisma.banner.update({
+          where: { id: item.id },
+          data: { position: index },
+        })
+      )
+    );
+
+    console.log("✅ Banners reordered");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("❌ PUT BANNER ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to reorder banners" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({ success: true });
 }
 
-/* ================= DELETE ================= */
+/* ================= DELETE BANNER ================= */
 export async function DELETE(req: Request) {
-  const { id } = await req.json();
+  try {
+    const { id } = await req.json();
 
-  await pool.query(`DELETE FROM banners WHERE id = $1`, [id]);
+    console.log("🗑️ Deleting banner:", id);
 
-  return NextResponse.json({ success: true });
+    await prisma.banner.delete({
+      where: { id },
+    });
+
+    console.log("✅ Banner deleted");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("❌ DELETE BANNER ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to delete banner" },
+      { status: 500 }
+    );
+  }
 }
