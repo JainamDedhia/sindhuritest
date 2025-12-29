@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Product Upload", href: "/admin/products" },
   { label: "Banner Upload", href: "/admin/banners" },
-  { label: "Manage Banners", href: "/admin/banners/manage" },
+  { label: "Manage Banners", href: "/admin/banners/manage"},
   { label: "Analytics", href: "/admin/analytics" },
 ];
 
@@ -22,6 +22,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-cream)]">
+
       {/* ===== MOBILE OVERLAY ===== */}
       {open && (
         <div
@@ -38,7 +39,9 @@ export default function AdminLayout({
         ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Brand */}
-        <h1 className="text-xl font-semibold mb-10">Admin Panel</h1>
+        <h1 className="text-xl font-semibold mb-10">
+          Admin Panel
+        </h1>
 
         {/* Nav */}
         <nav className="space-y-1">
@@ -66,6 +69,7 @@ export default function AdminLayout({
 
       {/* ===== MAIN AREA ===== */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
+
         {/* TOP BAR (MOBILE) */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-[var(--color-border)]">
           <div className="h-14 px-4 flex items-center justify-between">
@@ -76,7 +80,9 @@ export default function AdminLayout({
               Menu
             </button>
 
-            <span className="text-sm font-medium">Admin</span>
+            <span className="text-sm font-medium">
+              Admin
+            </span>
           </div>
         </header>
 

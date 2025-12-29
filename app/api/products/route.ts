@@ -1,36 +1,35 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { pool } from "@/app/lib/db";
 
 /* ================= GET PRODUCTS ================= */
+
 export async function GET() {
   try {
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      include: {
-        category: {
-          select: { name: true },
-        },
-        images: {
-          take: 1,
-          orderBy: { position: "asc" },
-          select: { imageUrl: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    // FIXED SQL: Uses a subquery for the image to prevent duplicate rows
+    const query = `
+      SELECT 
+        p.id, 
+        p.name, 
+        p.description, 
+        p.price, 
+        p.is_sold_out, 
+        p.is_active, 
+        c.name AS category_name,
+        (
+          SELECT image_url 
+          FROM product_images 
+          WHERE product_id = p.id 
+          LIMIT 1
+        ) AS image_url
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.is_active = true
+      ORDER BY p.created_at DESC
+    `;
 
-    // Transform to match frontend expectations
-    const transformed = products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      price: p.price.toString(),
-      is_sold_out: p.isSoldOut,
-      category_name: p.category?.name || null,
-      image_url: p.images[0]?.imageUrl || null,
-    }));
+    const { rows } = await pool.query(query);
 
-    return NextResponse.json(transformed);
+    return NextResponse.json(rows);
   } catch (error) {
     console.error("GET PRODUCTS ERROR:", error);
     return NextResponse.json(
@@ -42,30 +41,52 @@ export async function GET() {
 
 /* ================= CREATE PRODUCT ================= */
 export async function POST(req: Request) {
+  const body = await req.json();
+  let client;
+
   try {
-    const body = await req.json();
+    client = await pool.connect();
 
-    const product = await prisma.product.create({
-      data: {
-        name: body.name,
-        description: body.description || null,
-        price: parseFloat(body.price),
-        categoryId: body.category_id || null,
-        images: {
-          create: {
-            imageUrl: body.image_url,
-            position: 0,
-          },
-        },
-      },
-      include: {
-        images: true,
-      },
-    });
+    await client.query("BEGIN");
 
-    return NextResponse.json({ success: true, product });
+    const productRes = await client.query(
+      `
+      INSERT INTO products (
+        name,
+        description,
+        price,
+        category_id,
+        is_active
+      )
+      VALUES ($1, $2, $3, $4, true)
+      RETURNING id
+      `,
+      [
+        body.name,
+        body.description || null,
+        body.price,
+        body.category_id || null,
+      ]
+    );
+
+    const productId = productRes.rows[0].id;
+
+    await client.query(
+      `
+      INSERT INTO product_images (product_id, image_url)
+      VALUES ($1, $2)
+      `,
+      [productId, body.image_url]
+    );
+
+    await client.query("COMMIT");
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (client) await client.query("ROLLBACK");
+
     console.error("POST PRODUCTS ERROR:", error);
+
     return NextResponse.json(
       {
         error: "Database error",
@@ -73,5 +94,7 @@ export async function POST(req: Request) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }
