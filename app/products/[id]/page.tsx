@@ -26,35 +26,59 @@ export default function ProductDetailsPage() {
   const GOLD_RATE = 7000;
 
   useEffect(() => {
+    if (!params.id) return;
+
     fetch(`/api/products/${params.id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
+        console.log("✅ Product data received:", data);
         setProduct(data);
         setLoading(false);
 
+        // Check wishlist
         const wishlist = localStorage.getItem("wishlist");
         if (wishlist) {
           const items = JSON.parse(wishlist);
           setIsWishlisted(items.some((i: any) => i.id === data.id));
         }
 
+        // Check cart
         const cart = localStorage.getItem("cart");
         if (cart) {
           const items = JSON.parse(cart);
           setIsInCart(items.some((i: any) => i.id === data.id));
         }
       })
-      .catch(() => setLoading(false));
+      .catch((error) => {
+        console.error("❌ Failed to fetch product:", error);
+        setLoading(false);
+      });
   }, [params.id]);
 
   const toggleWishlist = () => {
     const wishlist = localStorage.getItem("wishlist");
     let items = wishlist ? JSON.parse(wishlist) : [];
 
+    // Create a normalized product object for localStorage
+    const productForStorage = {
+      id: product.id,
+      title: product.name,
+      category: product.category_name || "Jewellery",
+      description: product.description || "",
+      price: parseFloat(product.calculated_price),
+      image: product.image_url,
+      inStock: !product.is_sold_out,
+    };
+
     if (isWishlisted) {
       items = items.filter((i: any) => i.id !== product.id);
     } else {
-      items.push(product);
+      items.push(productForStorage);
     }
 
     localStorage.setItem("wishlist", JSON.stringify(items));
@@ -66,12 +90,23 @@ export default function ProductDetailsPage() {
     const cart = localStorage.getItem("cart");
     const items = cart ? JSON.parse(cart) : [];
 
+    // Create a normalized product object for cart
+    const productForCart = {
+      id: product.id,
+      title: product.name,
+      category: product.category_name || "Jewellery",
+      description: product.description || "",
+      price: parseFloat(product.calculated_price),
+      image: product.image_url,
+      quantity: 1,
+    };
+
     const existingIndex = items.findIndex((i: any) => i.id === product.id);
 
     if (existingIndex > -1) {
       items[existingIndex].quantity += 1;
     } else {
-      items.push({ ...product, quantity: 1 });
+      items.push(productForCart);
     }
 
     localStorage.setItem("cart", JSON.stringify(items));
@@ -127,20 +162,29 @@ Image: ${product.image_url}`;
         </button>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+          {/* Image Section */}
           <div className="relative">
             <div className="aspect-square overflow-hidden rounded-2xl bg-gray-50">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
+              {product.image_url ? (
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    console.error("Image failed to load:", product.image_url);
+                    e.currentTarget.src = "https://placehold.co/600x600?text=No+Image";
+                  }}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+                  No Image Available
+                </div>
+              )}
             </div>
 
-            <div className="absolute left-4 top-4 rounded-lg bg-black/80 px-3 py-1.5 font-mono text-xs font-semibold tracking-wider text-white backdrop-blur-sm">
-              {product.product_code}
-            </div>
           </div>
 
+          {/* Details Section */}
           <div className="flex flex-col">
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-gold-primary)]">
               {product.category_name || "Jewellery"}

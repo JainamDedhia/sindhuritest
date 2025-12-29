@@ -5,9 +5,9 @@ import Link from "next/link";
 import { HeartOff, ShoppingBag } from "lucide-react";
 import ProductCard from "@/app/components/ProductCard";
 
-// Reuse the interface you already have
+// Match the interface that ProductCard expects
 interface Product {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   description: string;
@@ -20,12 +20,12 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Load Wishlist from LocalStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("wishlist");
     if (saved) {
       try {
-        setWishlistItems(JSON.parse(saved));
+        const items = JSON.parse(saved);
+        setWishlistItems(items);
       } catch (e) {
         console.error("Failed to parse wishlist", e);
       }
@@ -33,21 +33,20 @@ export default function WishlistPage() {
     setLoading(false);
   }, []);
 
-  // 2. Helper to remove item (passed to page logic, though usually handled in global state)
-  const removeFromWishlist = (id: number) => {
+  const removeFromWishlist = (id: number | string) => {
     const updated = wishlistItems.filter((item) => item.id !== id);
     setWishlistItems(updated);
     localStorage.setItem("wishlist", JSON.stringify(updated));
+    window.dispatchEvent(new Event("wishlist-updated"));
   };
 
-  if (loading) return null; // Or a simple spinner
+  if (loading) return null;
 
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
       <h1 className="mb-8 text-2xl font-bold">My Wishlist ({wishlistItems.length})</h1>
 
       {wishlistItems.length === 0 ? (
-        /* EMPTY STATE UI */
         <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
             <HeartOff size={32} />
@@ -69,21 +68,17 @@ export default function WishlistPage() {
           </Link>
         </div>
       ) : (
-        /* WISHLIST GRID */
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-6">
           {wishlistItems.map((item) => (
-            <div key={item.id} className="relative">
-              {/* We wrap ProductCard to add a 'Remove' capability if needed, 
-                  or just render it as is. For now, rendering as is. */}
-              <ProductCard
-                product={item}
-              />
+            <div key={item.id} className="relative group">
+              <ProductCard product={item} />
               
-              {/* Optional: Explicit Remove Button overlay if you want it distinct from the heart */}
+              {/* Remove button overlay */}
               <button
                 onClick={(e) => {
-                    e.preventDefault();
-                    removeFromWishlist(item.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removeFromWishlist(item.id);
                 }}
                 className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-500 opacity-0 transition-opacity hover:bg-red-100 group-hover:opacity-100"
                 title="Remove from wishlist"
