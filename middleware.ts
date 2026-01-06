@@ -22,22 +22,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // === PUBLIC ROUTES ===
+  // === PUBLIC ROUTES (NO AUTH CHECK) ===
   const publicPaths = [
     "/", 
     "/products", 
-    "/product", 
     "/about", 
     "/contact", 
     "/auth/login",
-    "/auth/check-profile", // ADD THIS
-    "/auth/complete-profile", // Allow access to complete profile page
+    "/auth/check-profile",
+    "/auth/complete-profile",
     "/terms",
-    "/privacy"
+    "/privacy",
+    "/api",
+    "/_next",
+    "/favicon.ico"
   ]
 
   const isPublic = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(path + "/")
+    (path) => pathname === path || pathname.startsWith(path + "/") || pathname.startsWith(path)
   )
 
   if (isPublic) {
@@ -52,22 +54,35 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isUserProtected) {
+    // ✅ FIX: Get token properly
     const token = await getToken({ 
-      req: request, 
-      secret: process.env.NEXTAUTH_SECRET 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === "production"
     })
 
+    console.log("🔍 Token check for protected route:", {
+      pathname,
+      hasToken: !!token,
+      email: token?.email,
+      hasCompletedProfile: token?.hasCompletedProfile
+    })
+
+    // Not logged in at all
     if (!token) {
+      console.log("❌ No token found, redirecting to login")
       const loginUrl = new URL("/auth/login", request.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
 
-    // Check if profile is completed
-    if (!token.hasCompletedProfile) {
-      // Redirect to complete profile page
+    // Logged in but profile not completed
+    if (token.hasCompletedProfile === false) {
+      console.log("⚠️ Profile incomplete, redirecting to complete-profile")
       return NextResponse.redirect(new URL("/auth/complete-profile", request.url))
     }
+
+    console.log("✅ Token valid, allowing access")
   }
 
   return NextResponse.next()
@@ -75,6 +90,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api|assets|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|assets|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

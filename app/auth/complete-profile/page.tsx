@@ -1,3 +1,4 @@
+// app/auth/complete-profile/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -6,7 +7,7 @@ import { useState, useEffect } from "react";
 import { Phone, CheckCircle2, Loader2, Shield } from "lucide-react";
 
 export default function CompleteProfilePage() {
-  const { data: session, status, update } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   
   const [loading, setLoading] = useState(false);
@@ -18,20 +19,18 @@ export default function CompleteProfilePage() {
   });
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (status === "unauthenticated") {
       router.push("/auth/login");
       return;
     }
 
-    // If user already completed profile, redirect to home
     if (status === "authenticated" && session?.user?.hasCompletedProfile) {
+      console.log("✅ Profile already completed, redirecting home");
       router.push("/");
     }
   }, [status, session, router]);
 
   const validatePhone = (phone: string) => {
-    // Basic Indian phone number validation
     const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phone);
   };
@@ -40,7 +39,6 @@ export default function CompleteProfilePage() {
     e.preventDefault();
     setError("");
 
-    // Validation
     if (!validatePhone(formData.phone)) {
       setError("Please enter a valid 10-digit Indian mobile number");
       return;
@@ -69,12 +67,14 @@ export default function CompleteProfilePage() {
         throw new Error(data.error || "Failed to update profile");
       }
 
-      // Update session
-      await update();
+      console.log("✅ Profile update successful:", data);
 
-      // Success - redirect to home
-      router.push("/");
+      // ✅ CRITICAL: Force full page reload to refresh session
+      alert("Profile completed successfully!");
+      window.location.href = "/";
+      
     } catch (err: any) {
+      console.error("❌ Profile update error:", err);
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -93,10 +93,8 @@ export default function CompleteProfilePage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
       <div className="w-full max-w-md">
         
-        {/* Card */}
         <div className="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-100">
           
-          {/* Header */}
           <div className="border-b border-gray-100 bg-white px-8 py-6 text-center">
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10">
               <CheckCircle2 className="h-7 w-7 text-[var(--color-gold-primary)]" />
@@ -109,10 +107,8 @@ export default function CompleteProfilePage() {
             </p>
           </div>
 
-          {/* Form */}
           <div className="p-8">
             
-            {/* Welcome Message */}
             <div className="mb-6 rounded-lg bg-gray-50 p-4">
               <p className="text-sm text-gray-600">
                 Welcome, <span className="font-semibold text-gray-900">{session?.user?.name}</span>! 
@@ -128,7 +124,6 @@ export default function CompleteProfilePage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* Phone Number */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-700">
                   <Phone size={16} />
@@ -144,7 +139,6 @@ export default function CompleteProfilePage() {
                     maxLength={10}
                     value={formData.phone}
                     onChange={(e) => {
-                      // Only allow digits
                       const value = e.target.value.replace(/\D/g, "");
                       setFormData({ ...formData, phone: value });
                     }}
@@ -162,7 +156,6 @@ export default function CompleteProfilePage() {
                 </p>
               </div>
 
-              {/* Terms & Conditions */}
               <div className="space-y-3">
                 <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:bg-gray-100">
                   <input
@@ -176,15 +169,15 @@ export default function CompleteProfilePage() {
                   />
                   <span className="text-sm text-gray-700">
                     I agree to the{" "}
-                    <a
+                    
                       href="/terms"
                       target="_blank"
-                      className="font-medium text-[var(--color-gold-primary)] hover:underline"
+                      className="font-medium text-[var(--color-gold-primary)] hover:underline">
                     >
                       Terms & Conditions
                     </a>{" "}
                     and{" "}
-                    <a
+                    
                       href="/privacy"
                       target="_blank"
                       className="font-medium text-[var(--color-gold-primary)] hover:underline"
@@ -195,7 +188,6 @@ export default function CompleteProfilePage() {
                 </label>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -223,7 +215,6 @@ export default function CompleteProfilePage() {
             </form>
           </div>
 
-          {/* Footer */}
           <div className="border-t border-gray-100 bg-gray-50 px-8 py-4 text-center">
             <div className="flex items-center justify-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-400">
               <Shield size={12} />

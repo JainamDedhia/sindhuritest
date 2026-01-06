@@ -1,10 +1,10 @@
+// app/api/user/complete-profile/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    // Get session token from cookies
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get("authjs.session-token")?.value || 
                         cookieStore.get("__Secure-authjs.session-token")?.value;
@@ -16,7 +16,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get session from database
     const session = await prisma.session.findUnique({
       where: { sessionToken },
       include: { user: true },
@@ -31,7 +30,6 @@ export async function POST(req: Request) {
 
     const { phone, termsAccepted } = await req.json();
 
-    // Validation
     if (!phone || phone.length !== 10) {
       return NextResponse.json(
         { error: "Valid 10-digit phone number is required" },
@@ -47,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     // Update user in database
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {
         phone,
@@ -56,12 +54,18 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log("✅ Profile completed for:", updatedUser.email);
+
     return NextResponse.json({
       success: true,
       message: "Profile completed successfully",
+      user: {
+        hasCompletedProfile: updatedUser.hasCompletedProfile,
+        phone: updatedUser.phone,
+      }
     });
   } catch (error: any) {
-    console.error("Complete profile error:", error);
+    console.error("❌ Complete profile error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to update profile" },
       { status: 500 }
