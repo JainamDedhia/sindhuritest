@@ -11,7 +11,7 @@ interface Product {
   title: string;
   category: string;
   description: string;
-  price: number;
+  weight: string;
   image: string;
   inStock: boolean;
 }
@@ -69,8 +69,8 @@ export default function WishlistPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-6">
-          {wishlistItems.map((item) => (
-            <div key={item.id} className="relative group">
+          {wishlistItems.map((item, index) => (
+            <div key={`${item.id}-${index}`} className="relative group">
               <ProductCard product={item} />
               
               {/* Remove button overlay */}

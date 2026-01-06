@@ -53,15 +53,17 @@ export default function SearchBar({
             relative flex flex-1 items-center
             h-12 md:h-14 w-full
             rounded-2xl
-            border border-gray-200 bg-white
+            border-2 border-gray-200 
+            bg-white
             px-4
             focus-within:border-[var(--color-gold-primary)] 
-            focus-within:ring-1 focus-within:ring-[var(--color-gold-primary)]
+            focus-within:ring-2 focus-within:ring-[var(--color-gold-primary)]/20
             transition-all shadow-sm
+            hover:border-gray-300
           "
         >
           {/* Search Icon */}
-          <Search className="mr-3 h-5 w-5 text-gray-400 shrink-0 " />
+          <Search className="mr-3 h-5 w-5 text-gray-400 shrink-0" />
           
           {/* Search Input */}
           <input
@@ -70,14 +72,30 @@ export default function SearchBar({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+            className="
+              w-full 
+              bg-transparent 
+              text-sm 
+              text-gray-900 
+              placeholder-gray-400 
+              focus:outline-none
+              focus:placeholder-gray-300
+            "
           />
 
           {/* Clear Button */}
           {value && (
             <button
               onClick={handleClear}
-              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="
+                ml-2 
+                flex h-6 w-6 items-center justify-center
+                rounded-full
+                text-gray-400 
+                hover:bg-gray-100 
+                hover:text-gray-600 
+                transition-all
+              "
               type="button"
               aria-label="Clear search"
             >
@@ -91,9 +109,16 @@ export default function SearchBar({
           onClick={onFilterClick}
           className="
             flex h-12 md:h-14 items-center gap-2 
-            rounded-2xl border border-gray-200 bg-white 
-            px-5 text-sm font-semibold text-gray-700 
-            hover:bg-gray-50 active:scale-95 transition-all shadow-sm
+            rounded-2xl 
+            border-2 border-gray-200 
+            bg-white 
+            px-5 
+            text-sm font-semibold text-gray-700 
+            hover:bg-gray-50 
+            hover:border-gray-300
+            active:scale-95 
+            transition-all 
+            shadow-sm
           "
           type="button"
           aria-label="Open filters"

@@ -1,33 +1,40 @@
+"use client";
+
 import "./globals.css"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
-import AuthSessionProvider from "./components/SessionProvider" // 🔑 Keep auth provider
+import AuthSessionProvider from "./components/SessionProvider"
+import { usePathname } from "next/navigation"
 
 /**
  * ROOT LAYOUT
- * Wraps entire app with auth session provider, navbar, and footer
- * This ensures authentication state is available throughout the app
+ * Shows Navbar + Footer for regular pages
+ * Hides them for admin routes (admin has its own layout)
  */
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // Check if we're in admin section
+  const isAdminRoute = pathname?.startsWith("/admin");
+
   return (
     <html lang="en">
       <body className="bg-white text-black">
-        {/* 🔑 Auth Provider - wraps everything to provide session context */}
         <AuthSessionProvider>
-          {/* Navigation bar with auth buttons */}
-          <Navbar />
+          {/* Only show Navbar + Footer for NON-admin routes */}
+          {!isAdminRoute && <Navbar />}
           
-          {/* Main content area - all pages render here */}
-          <main className="min-h-screen">{children}</main>
+          <main className={!isAdminRoute ? "min-h-screen" : ""}>
+            {children}
+          </main>
           
-          {/* Footer */}
-          <Footer />
+          {!isAdminRoute && <Footer />}
         </AuthSessionProvider>
       </body>
     </html>
-  )
+  );
 }

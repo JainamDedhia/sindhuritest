@@ -8,10 +8,22 @@ export async function POST(req: Request) {
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      return NextResponse.json({ 
+      // Create response
+      const response = NextResponse.json({ 
         success: true, 
         message: "Login successful" 
       });
+
+      // Set HTTP-only cookie for admin session
+      response.cookies.set("admin_session", "authenticated", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+
+      return response;
     }
 
     return NextResponse.json(

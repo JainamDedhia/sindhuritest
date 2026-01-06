@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import MobileStackCarousel from "./MobileStackCarousel";
 
 type Banner = {
   id: string;
@@ -102,43 +103,15 @@ export default function HeroSection() {
       </div>
 
       {/* ================= MOBILE CAROUSEL ================= */}
-      <div className="block md:hidden px-4 py-4">
-        {mobileBanners.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto no-scrollbar">
-            {mobileBanners.map((banner) => (
-              <div
-                key={banner.id}
-                className="min-w-[260px] h-[360px]
-                           rounded-2xl overflow-hidden
-                           bg-[var(--color-ivory)]
-                           shadow-sm border border-[var(--color-border)]
-                           relative flex-shrink-0"
-              >
-                <img
-                  src={banner.image_url}
-                  className="w-full h-full object-cover"
-                  alt="Mobile banner"
-                />
-
-                {(banner.title || banner.subtitle) && (
-                  <div className="absolute bottom-0 left-0 right-0
-                                  bg-gradient-to-t from-black/70 to-transparent
-                                  p-4 text-white">
-                    <h3 className="text-sm font-medium">
-                      {banner.title}
-                    </h3>
-                    <p className="text-xs opacity-90">
-                      {banner.subtitle}
-                    </p>
-                  </div>
-                )}
+          <div className="block md:hidden">
+            {mobileBanners.length > 0 ? (
+              <MobileStackCarousel banners={mobileBanners} />
+            ): (
+              <div className="px-[12.5vw] py-8">
+                <div className="aspect-[3/4] w-[75vw] rounded-[2rem] bg-gray-100 animate-pulse" />
               </div>
-            ))}
+            )}
           </div>
-        ) : (
-          <MobileFallback />
-        )}
-      </div>
     </section>
   );
 }

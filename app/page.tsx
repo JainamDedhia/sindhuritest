@@ -1,17 +1,18 @@
+import CategoryBento from "./components/CategoryBento";
+import GoldRateBanner from "./components/GoldRateBanner";
 import HeroSection from "./components/HeroSection"
 
 export default function HomePage() {
   return (
     <main className="p-6 space-y-6">
       <HeroSection />
-      <main/>
+      
 
       {/* Gold Rate */}
-      <div className="bg-gray-200 p-4 rounded-md">
-        <p className="text-gray-700 font-medium">
-          Today’s Gold Rate: ₹6,250 / gram
-        </p>
-      </div>
+     <GoldRateBanner />
+
+
+     <CategoryBento />
 
       {/* Featured Products */}
       <div>

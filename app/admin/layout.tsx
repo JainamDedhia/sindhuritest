@@ -7,10 +7,14 @@ import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin/dashboard" },
-  { label: "Product Upload", href: "/admin/products" },
+  { label: "Create Category" , href: "/admin/categories"},
+  { label: "Product Upload", href: "/admin/products/add" },
+  { label: "Product Management", href: "/admin/products"},
   { label: "Banner Upload", href: "/admin/banners" },
   { label: "Manage Banners", href: "/admin/banners/manage" },
   { label: "Analytics", href: "/admin/analytics" },
+  { label: "Gold Rate", href: "/admin/gold-rate"},
+  { label: "Bento Layout", href: "/admin/bento"},
 ];
 
 export default function AdminLayout({
@@ -26,6 +30,7 @@ export default function AdminLayout({
 
   // Check authentication
   useEffect(() => {
+    // Login page doesn't need auth check
     if (pathname === "/admin/login") {
       setLoading(false);
       return;
@@ -34,6 +39,7 @@ export default function AdminLayout({
     const adminSession = localStorage.getItem("admin_session");
     
     if (!adminSession) {
+      // Redirect directly to admin login, not user login
       router.push("/admin/login");
     } else {
       setIsAuthenticated(true);
@@ -41,12 +47,20 @@ export default function AdminLayout({
     }
   }, [pathname, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin_session");
-    router.push("/admin/login");
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear cookie
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Clear localStorage and redirect
+      localStorage.removeItem("admin_session");
+      router.push("/admin/login");
+    }
   };
 
-  // Show login page without layout
+  // Show login page WITHOUT any layout (no navbar, no footer)
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
@@ -54,17 +68,18 @@ export default function AdminLayout({
   // Show loading
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-gray-50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--color-gold-primary)]" />
       </div>
     );
   }
 
-  // Show protected layout
+  // Don't render anything if not authenticated (will redirect)
   if (!isAuthenticated) {
     return null;
   }
 
+  // Admin Layout - FULL SCREEN (no navbar, no footer from root layout)
   return (
     <div className="min-h-screen bg-[var(--color-cream)]">
       
@@ -107,13 +122,13 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* Logout Button */}
+        {/* Admin Logout Button */}
         <button
           onClick={handleLogout}
           className="mt-8 flex w-full items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
         >
           <LogOut size={16} />
-          Logout
+          Admin Logout
         </button>
       </aside>
 
@@ -129,11 +144,11 @@ export default function AdminLayout({
             >
               Menu
             </button>
-            <span className="text-sm font-medium">Admin</span>
+            <span className="text-sm font-medium">Admin Panel</span>
           </div>
         </header>
 
-        {/* CONTENT */}
+        {/* CONTENT - Full height, no footer */}
         <main className="flex flex-1 justify-center">
           <div className="w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8">
             {children}
