@@ -48,23 +48,38 @@ export default function ProfilePage() {
   const [editedProfile, setEditedProfile] = useState<UserProfile>(profile);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/login?callbackUrl=/profile");
-      return;
-    }
+  if (status === "unauthenticated") {
+    router.push("/auth/login?callbackUrl=/profile");
+    return;
+  }
 
-    if (session?.user) {
-      // Load saved profile from localStorage or use session data
-      const savedProfile = localStorage.getItem("user_profile");
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        setProfile(parsed);
-        setEditedProfile(parsed);
-      } else {
+  if (session?.user) {
+    // ✅ FIX 5: Fetch user profile from database
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("/api/user/profile");
+        const data = await response.json();
+        
+        const profileData = {
+          name: session.user.name || "",
+          email: session.user.email || "",
+          phone: data.phone || session.user.phone || "", // ✅ Use DB phone
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          pincode: data.pincode || "",
+          dateOfBirth: data.dateOfBirth || "",
+        };
+        
+        setProfile(profileData);
+        setEditedProfile(profileData);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        // Fallback to session data
         const initialProfile = {
           name: session.user.name || "",
           email: session.user.email || "",
-          phone: "",
+          phone: session.user.phone || "",
           address: "",
           city: "",
           state: "",
@@ -74,8 +89,11 @@ export default function ProfilePage() {
         setProfile(initialProfile);
         setEditedProfile(initialProfile);
       }
-    }
-  }, [session, status, router]);
+    };
+
+    fetchProfile();
+  }
+}, [session, status, router]);
 
   const handleSave = () => {
     setLoading(true);

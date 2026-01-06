@@ -1,4 +1,3 @@
-// app/auth/complete-profile/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -12,14 +11,16 @@ export default function CompleteProfilePage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
-  const [formData, setFormData] = useState({
-    phone: "",
-    termsAccepted: false,
-  });
+  const [phone, setPhone] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
+  // ✅ FIX 1: Better session check
   useEffect(() => {
+    console.log("🔍 Session status:", status);
+    console.log("📋 Session data:", session);
+
     if (status === "unauthenticated") {
+      console.log("❌ Not authenticated, redirecting to login");
       router.push("/auth/login");
       return;
     }
@@ -39,12 +40,12 @@ export default function CompleteProfilePage() {
     e.preventDefault();
     setError("");
 
-    if (!validatePhone(formData.phone)) {
+    if (!validatePhone(phone)) {
       setError("Please enter a valid 10-digit Indian mobile number");
       return;
     }
 
-    if (!formData.termsAccepted) {
+    if (!termsAccepted) {
       setError("Please accept the terms and conditions");
       return;
     }
@@ -52,25 +53,24 @@ export default function CompleteProfilePage() {
     setLoading(true);
 
     try {
+      console.log("📤 Submitting profile data:", { phone, termsAccepted });
+
       const response = await fetch("/api/user/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: formData.phone,
-          termsAccepted: formData.termsAccepted,
-        }),
+        body: JSON.stringify({ phone, termsAccepted }),
       });
 
       const data = await response.json();
+      console.log("📥 Response:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to update profile");
       }
 
-      console.log("✅ Profile update successful:", data);
-
-      // ✅ CRITICAL: Force full page reload to refresh session
-      alert("Profile completed successfully!");
+      alert("✅ Profile completed successfully!");
+      
+      // ✅ FIX 2: Force full page reload
       window.location.href = "/";
       
     } catch (err: any) {
@@ -84,7 +84,7 @@ export default function CompleteProfilePage() {
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold-primary)]" />
+        <Loader2 className="h-8 w-8 animate-spin text-yellow-600" />
       </div>
     );
   }
@@ -96,8 +96,8 @@ export default function CompleteProfilePage() {
         <div className="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-100">
           
           <div className="border-b border-gray-100 bg-white px-8 py-6 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10">
-              <CheckCircle2 className="h-7 w-7 text-[var(--color-gold-primary)]" />
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-yellow-600/10">
+              <CheckCircle2 className="h-7 w-7 text-yellow-600" />
             </div>
             <h1 className="font-serif text-2xl font-medium text-gray-900">
               Complete Your Profile
@@ -122,7 +122,7 @@ export default function CompleteProfilePage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-700">
@@ -137,17 +137,12 @@ export default function CompleteProfilePage() {
                     type="tel"
                     required
                     maxLength={10}
-                    value={formData.phone}
+                    value={phone}
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, "");
-                      setFormData({ ...formData, phone: value });
+                      setPhone(value);
                     }}
-                    className="
-                      w-full rounded-lg border border-gray-300 bg-white py-3 pl-14 pr-4
-                      text-sm text-gray-900 placeholder-gray-400
-                      transition-all
-                      focus:border-[var(--color-gold-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold-primary)]/20
-                    "
+                    className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-14 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-600/20"
                     placeholder="9876543210"
                   />
                 </div>
@@ -157,48 +152,24 @@ export default function CompleteProfilePage() {
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:bg-gray-100">
+                <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:bg-gray-100 cursor-pointer">
                   <input
                     type="checkbox"
                     required
-                    checked={formData.termsAccepted}
-                    onChange={(e) =>
-                      setFormData({ ...formData, termsAccepted: e.target.checked })
-                    }
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--color-gold-primary)] focus:ring-2 focus:ring-[var(--color-gold-primary)]/20"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-yellow-600 focus:ring-2 focus:ring-yellow-600/20"
                   />
                   <span className="text-sm text-gray-700">
-                    I agree to the{" "}
-                    
-                      href="/terms"
-                      target="_blank"
-                      className="font-medium text-[var(--color-gold-primary)] hover:underline">
-                    >
-                      Terms & Conditions
-                    </a>{" "}
-                    and{" "}
-                    
-                      href="/privacy"
-                      target="_blank"
-                      className="font-medium text-[var(--color-gold-primary)] hover:underline"
-                    >
-                      Privacy Policy
-                    </a>
+                    I agree to the Terms & Conditions and Privacy Policy
                   </span>
                 </label>
               </div>
 
               <button
-                type="submit"
+                onClick={handleSubmit}
                 disabled={loading}
-                className="
-                  flex w-full items-center justify-center gap-2 rounded-lg
-                  bg-[var(--color-gold-primary)] py-3.5 text-sm font-bold text-white
-                  shadow-sm transition-all
-                  hover:bg-[var(--color-gold-accent)]
-                  active:scale-[0.99]
-                  disabled:cursor-not-allowed disabled:opacity-70
-                "
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-600 py-3.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-yellow-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
                   <>
@@ -212,7 +183,7 @@ export default function CompleteProfilePage() {
                   </>
                 )}
               </button>
-            </form>
+            </div>
           </div>
 
           <div className="border-t border-gray-100 bg-gray-50 px-8 py-4 text-center">
