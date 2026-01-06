@@ -25,12 +25,23 @@ const authResult = NextAuth({
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id
+        // Add custom fields to session
+        session.user.hasCompletedProfile = user.hasCompletedProfile || false
+        session.user.phone = user.phone
       }
       return session
     },
   },
 
-  debug: true, // Enable this to see auth errors in console
+  events: {
+    async signIn({ user, isNewUser }) {
+      if (isNewUser) {
+        console.log("🎉 New user signed up:", user.email);
+      }
+    },
+  },
+
+  debug: true,
 })
 
 export const GET = authResult.handlers.GET

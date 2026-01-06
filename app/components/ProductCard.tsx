@@ -8,8 +8,8 @@ interface ProductProps {
   id: number | string;
   title: string;
   category: string;
-  weight: string;
   description: string;
+  price: number;
   image: string;
   inStock: boolean;
 }
@@ -20,6 +20,11 @@ export default function ProductCard({ product }: { product: ProductProps }) {
 
   const ADMIN_PHONE_NUMBER = "917021419016";
 
+  const formattedPrice = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(product.price);
 
   useEffect(() => {
     const savedWishlist = localStorage.getItem("wishlist");
@@ -81,7 +86,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     const message = `Hello, I am interested in this Product: 
     *${product.title}* 
     Category: ${product.category} 
-    Price: ${product.weight} 
+    Price: ${formattedPrice} 
     
     *Image*: ${product.image}`;
 
@@ -145,7 +150,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
               </h3>
             </div>
             <span className="shrink-0 text-[14px] font-bold text-gray-900">
-              {product.weight} g
+              {formattedPrice}
             </span>
           </div>
 

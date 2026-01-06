@@ -1,38 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { pool } from "@/app/lib/db";
 
 const GOLD_RATE_PER_GRAM = parseFloat(process.env.GOLD_RATE_PER_GRAM || "7000");
-
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string} >}
-){
-  try {
-    const { id } = await params;
-
-    console.log(`Deleting Product Id: ${id}`);
-
-
-    await pool.query(`DELETE FROM products WHERE id = $1`, [id]);
-
-    return NextResponse.json({
-      success: true, message: "Product deleted"
-    });
-  }
-  catch (error: any){
-    console.log("DELETE ERROR: ", error.message);
-    return NextResponse.json(
-      { error: "Delete Failed" ,details: error.message},
-      { status: 500}
-    );
-  }
-}
-
-
-
-
-
 
 export async function GET(
   req: Request,
@@ -88,4 +57,3 @@ export async function GET(
     );
   }
 }
-

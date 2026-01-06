@@ -11,7 +11,7 @@ interface Product {
   title: string;
   category: string;
   description: string;
-  weight: string;
+  price: number;
   image: string;
   inStock: boolean;
 }

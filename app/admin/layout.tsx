@@ -7,14 +7,10 @@ import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin/dashboard" },
-  { label: "Create Category" , href: "/admin/categories"},
-  { label: "Product Upload", href: "/admin/products/add" },
-  { label: "Product Management", href: "/admin/products"},
+  { label: "Product Upload", href: "/admin/products" },
   { label: "Banner Upload", href: "/admin/banners" },
   { label: "Manage Banners", href: "/admin/banners/manage" },
   { label: "Analytics", href: "/admin/analytics" },
-  { label: "Gold Rate", href: "/admin/gold-rate"},
-  { label: "Bento Layout", href: "/admin/bento"},
 ];
 
 export default function AdminLayout({

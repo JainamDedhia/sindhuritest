@@ -1,73 +1,73 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  
 
   console.log("🔒 Middleware check:", { pathname })
 
-  // === ADMIN ROUTES - SEPARATE AUTHENTICATION ===
+  // === ADMIN ROUTES ===
   if (pathname.startsWith("/admin")) {
-    // Allow login page
     if (pathname === "/admin/login") {
       return NextResponse.next()
     }
 
-    // Check for ADMIN session (not user session)
     const adminSession = request.cookies.get("admin_session")?.value
 
-    console.log("🔍 Admin auth check:", {
-      hasAdminSession: !!adminSession,
-      pathname
-    })
-
     if (!adminSession) {
-      console.log("❌ No admin session, redirecting to /admin/login")
       return NextResponse.redirect(new URL("/admin/login", request.url))
     }
 
-    console.log("✅ Admin authenticated")
     return NextResponse.next()
   }
 
   // === PUBLIC ROUTES ===
-  const publicPaths = ["/", "/products", "/product", "/about", "/contact", "/auth/login"]
-  
+  const publicPaths = [
+    "/", 
+    "/products", 
+    "/product", 
+    "/about", 
+    "/contact", 
+    "/auth/login",
+    "/auth/check-profile", // ADD THIS
+    "/auth/complete-profile", // Allow access to complete profile page
+    "/terms",
+    "/privacy"
+  ]
 
   const isPublic = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
   )
 
   if (isPublic) {
-    console.log("✅ Public route, allowing access")
     return NextResponse.next()
   }
 
-  // === USER PROTECTED ROUTES (Wishlist, Cart) ===
-const userProtectedPaths = ["/wishlist", "/cart", "/profile"]
+  // === USER PROTECTED ROUTES ===
+  const userProtectedPaths = ["/wishlist", "/cart", "/profile"]
 
   const isUserProtected = userProtectedPaths.some((path) =>
     pathname.startsWith(path)
   )
 
   if (isUserProtected) {
-    // Check for NextAuth user session
-    const sessionToken = request.cookies.get("authjs.session-token")?.value
-
-    console.log("🔍 User session check:", {
-      hasSessionToken: !!sessionToken,
-      pathname
+    const token = await getToken({ 
+      req: request, 
+      secret: process.env.NEXTAUTH_SECRET 
     })
 
-    if (!sessionToken) {
-      console.log("❌ No user session, redirecting to /auth/login")
+    if (!token) {
       const loginUrl = new URL("/auth/login", request.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
 
-    console.log("✅ User authenticated")
+    // Check if profile is completed
+    if (!token.hasCompletedProfile) {
+      // Redirect to complete profile page
+      return NextResponse.redirect(new URL("/auth/complete-profile", request.url))
+    }
   }
 
   return NextResponse.next()

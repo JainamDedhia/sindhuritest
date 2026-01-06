@@ -9,10 +9,10 @@ interface ApiProduct {
   id: number;
   name: string;
   description: string;
-  weight: string;
+  price: string;
   is_sold_out: boolean;
   category_name: string;
-  image: string;
+  image_url: string;
 }
 
 export default function ProductsPage() {
@@ -82,10 +82,10 @@ export default function ProductsPage() {
                   product={{
                     id: item.id,
                     title: item.name,
-                    weight: item.weight,
                     category: item.category_name || "Jewelry",
                     description: item.description,
-                    image: item.image || "https://placehold.co/400x500",
+                    price: Number(item.price),
+                    image: item.image_url || "https://placehold.co/400x500",
                     inStock: !item.is_sold_out,
                   }}
                 />

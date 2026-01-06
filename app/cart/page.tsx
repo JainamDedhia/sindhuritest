@@ -9,7 +9,6 @@ interface CartItem {
   title: string;
   category: string;
   price: number;
-  weight: number;
   image: string;
   quantity: number;
 }
@@ -59,7 +58,7 @@ export default function CartPage() {
 
   // 4. Calculations
   const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.weight * item.quantity,
+    (acc, item) => acc + item.price * item.quantity,
     0
   );
   const shipping = subtotal > 50000 ? 0 : 500; // Free shipping over 50k logic
@@ -154,11 +153,11 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                        <p className="text-sm font-bold text-gray-900">
-                         {formatPrice(item.weight * item.quantity)}
+                         {formatPrice(item.price * item.quantity)}
                        </p>
                        {item.quantity > 1 && (
                          <p className="text-[10px] text-gray-500">
-                           {formatPrice(item.weight)} each
+                           {formatPrice(item.price)} each
                          </p>
                        )}
                     </div>
