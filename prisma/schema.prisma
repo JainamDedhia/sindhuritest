@@ -7,19 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== AUTH MODELS ====================
+
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  phone         String?   // WhatsApp number
-  hasCompletedProfile Boolean @default(false) @map("has_completed_profile") // NEW
-  termsAccepted Boolean   @default(false) @map("terms_accepted") // NEW
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String?   @unique
+  emailVerified       DateTime?
+  image               String?
+  phone               String?
+  hasCompletedProfile Boolean   @default(false) @map("has_completed_profile")
+  termsAccepted       Boolean   @default(false) @map("terms_accepted")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  accounts            Account[]
+  sessions            Session[]
 }
 
 model Account {
@@ -58,6 +60,8 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ==================== PRODUCT MODELS ====================
+
 model Category {
   id        String    @id @default(cuid())
   name      String    @unique
@@ -71,10 +75,10 @@ model Category {
 
 model Product {
   id          String         @id @default(cuid())
-  productCode String         @unique @map("product_code") // NEW: Unique product code
+  productCode String         @unique @map("product_code")
   name        String
   description String?
-  weight      Decimal        @db.Decimal(10, 3) @map("weight") // CHANGED: From price to weight in grams
+  weight      Decimal        @db.Decimal(10, 3)
   categoryId  String?        @map("category_id")
   isSoldOut   Boolean        @default(false) @map("is_sold_out")
   isActive    Boolean        @default(true) @map("is_active")
@@ -85,7 +89,7 @@ model Product {
 
   @@index([categoryId])
   @@index([isActive, isSoldOut])
-  @@index([productCode]) // NEW: Index for quick lookups
+  @@index([productCode])
   @@map("products")
 }
 
@@ -101,6 +105,8 @@ model ProductImage {
   @@map("product_images")
 }
 
+// ==================== BANNER MODELS ====================
+
 model Banner {
   id         String   @id @default(cuid())
   imageUrl   String   @map("image_url")
@@ -114,3 +120,31 @@ model Banner {
   @@map("banners")
 }
 
+// ==================== BENTO GRID ====================
+
+model BentoItem {
+  id         String   @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String   @map("image_url")
+  targetLink String   @map("target_link")
+  size       String   // "small", "wide", "tall", "large"
+  position   Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([position])
+  @@map("bento_items")
+}
+
+// ==================== SETTINGS ====================
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}

@@ -1,7 +1,6 @@
+// app/api/admin/products/[id]/toggle-stock/route.ts
 import { NextResponse } from "next/server";
-import { pool } from "@/app/lib/db";
-
-
+import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   req: Request,
@@ -9,12 +8,15 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { is_sold_out } = await req.json(); // We expect the NEW status here
+    const { is_sold_out } = await req.json();
 
-    await pool.query(
-      `UPDATE products SET is_sold_out = $1, updated_at = NOW() WHERE id = $2`,
-      [is_sold_out, id]
-    );
+    await prisma.product.update({
+      where: { id },
+      data: { 
+        isSoldOut: is_sold_out,
+        updatedAt: new Date(),
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
