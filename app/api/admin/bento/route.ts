@@ -1,17 +1,13 @@
-// app/api/admin/bento/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { pool } from "@/app/lib/db";
+import { randomUUID } from "crypto";
 
 // GET: Fetch all bento items ordered by position
 export async function GET() {
   try {
-    const items = await prisma.bentoItem.findMany({
-      orderBy: { position: "asc" },
-    });
-    
-    return NextResponse.json(items);
+    const { rows } = await pool.query(`SELECT * FROM bento_items ORDER BY position ASC`);
+    return NextResponse.json(rows);
   } catch (error) {
-    console.error("BENTO GET ERROR:", error);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
@@ -22,18 +18,15 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, subtitle, image_url, target_link, size, position } = body;
     
-    const bentoItem = await prisma.bentoItem.create({
-      data: {
-        title,
-        subtitle,
-        imageUrl: image_url,
-        targetLink: target_link,
-        size,
-        position: position || 0,
-      },
-    });
+    const id = randomUUID();
+    
+    await pool.query(
+      `INSERT INTO bento_items (id, title, subtitle, image_url, target_link, size, position, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+      [id, title, subtitle, image_url, target_link, size, position || 0]
+    );
 
-    return NextResponse.json({ success: true, id: bentoItem.id });
+    return NextResponse.json({ success: true, id });
   } catch (error: any) {
     console.error("BENTO POST ERROR:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -44,14 +37,9 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const { id } = await req.json();
-    
-    await prisma.bentoItem.delete({
-      where: { id },
-    });
-    
+    await pool.query("DELETE FROM bento_items WHERE id = $1", [id]);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("BENTO DELETE ERROR:", error);
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

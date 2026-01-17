@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/app/lib/db";
+import { randomUUID } from "crypto";
 
 export async function GET() {
     try{
@@ -16,6 +17,7 @@ export async function GET() {
 
 export async function POST(req: Request){
     try{
+        const randomid = randomUUID();
         const { rate } = await req.json();
 
         if(!rate || isNaN(Number(rate))){
@@ -23,11 +25,11 @@ export async function POST(req: Request){
         }
 
         await pool.query(
-            `INSERT INTO settings (key, value, updated_at)
-            VALUES ('gold_rate', $1, NOW())
+            `INSERT INTO settings (id,key, value, updated_at)
+            VALUES ($2,'gold_rate', $1, NOW())
             ON CONFLICT (key)
             DO UPDATE SET value = $1, updated_at = NOW()`,
-            [rate.toString()]
+            [rate.toString(), randomid]
         );
 
         return NextResponse.json({ success: true, rate});    
