@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react";
 
+
 export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -151,6 +152,7 @@ Image: ${product.image_url}`;
   }
 
   return (
+
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <button

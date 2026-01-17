@@ -13,19 +13,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      // Check if profile is completed
-      if (session.user?.hasCompletedProfile === false) {
-        window.location.href = "/auth/complete-profile"
-      } else {
-        window.location.href = callbackUrl
-      }
+      window.location.href = callbackUrl
     }
   }, [status, session, callbackUrl])
 
   const handleSignIn = async () => {
     setIsSigningIn(true)
     try {
-      await signIn("google", { callbackUrl: "/auth/check-profile" })
+      await signIn("google", { callbackUrl })
     } catch (error) {
       console.error("Sign in error:", error)
       setIsSigningIn(false)

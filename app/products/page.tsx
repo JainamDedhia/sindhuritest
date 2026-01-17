@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import ProductCard from "@/app/components/ProductCard";
 import ProductCardSkeleton from "@/app/components/ProductCardSkeleton";
 import SearchBar from "@/app/components/SearchBar"; // Import the new component
@@ -9,13 +9,13 @@ interface ApiProduct {
   id: number;
   name: string;
   description: string;
-  price: string;
+  weight: string;
   is_sold_out: boolean;
   category_name: string;
-  image_url: string;
+  image: string;
 }
 
-export default function ProductsPage() {
+function ProductContent() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,10 +82,10 @@ export default function ProductsPage() {
                   product={{
                     id: item.id,
                     title: item.name,
+                    weight: item.weight,
                     category: item.category_name || "Jewelry",
                     description: item.description,
-                    price: Number(item.price),
-                    image: item.image_url || "https://placehold.co/400x500",
+                    image: item.image || "https://placehold.co/400x500",
                     inStock: !item.is_sold_out,
                   }}
                 />
@@ -95,4 +95,12 @@ export default function ProductsPage() {
       </div>
     </div>
   );
+}
+
+export default function ProductsPage(){
+  return(
+    <Suspense fallback= { <div className="p-10 text-center">Loading...</div>}>
+      <ProductContent />
+    </Suspense>
+  )
 }

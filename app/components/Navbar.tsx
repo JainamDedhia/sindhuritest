@@ -1,164 +1,188 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { User, LogOut, Settings, Heart, ShoppingBag } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Menu, X, ShoppingBag, Heart, User, Search } from "lucide-react";
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // ✅ FIX 3: Proper sign out handler
-  const handleSignOut = async () => {
-    if (!confirm("Are you sure you want to sign out?")) return;
-    
-    try {
-      await signOut({ 
-        callbackUrl: "/",
-        redirect: true 
-      });
-    } catch (error) {
-      console.error("❌ Sign out error:", error);
-      alert("Failed to sign out. Please try again.");
-    }
-  };
+  // Helper to highlight active link
+  const isActive = (path: string) => 
+    pathname === path ? "text-[var(--color-gold-primary)]" : "text-gray-900";
 
   return (
-    <nav className="w-full h-16 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="container h-full flex items-center justify-between">
+    // 'relative' is needed here so the absolute menu positions itself relative to this nav
+    <nav className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-white/80 backdrop-blur-md shadow-sm relative">
+      
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         
-        {/* LEFT: Logo/Brand */}
-        <Link href="/" className="flex items-center">
-          <img src="/assets/Sinduri_Logo.PNG" width={100} height={20} className="mt-4" alt="Logo" />
-        </Link>
+        {/* ==================== MOBILE LAYOUT (Visible < md) ==================== */}
+        <div className="flex w-full items-center justify-between md:hidden relative">
+          
+          {/* 1. HAMBURGER MENU (Left) */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 -ml-2 text-gray-700 transition-colors hover:text-black"
+          >
+            {/* Simple fade/rotation transition for icon could go here, keeping it simple for now */}
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} className="cursor-pointer" />}
+          </button>
 
-        {/* RIGHT: Navigation + Auth */}
-        <div className="flex items-center gap-6">
-          {/* Main navigation links */}
+          {/* 2. LOGO (Centered Absolutely) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+              <img 
+                src="/assets/Sinduri_Logo.PNG" 
+                width={100} 
+                height={20} 
+                alt="Logo" 
+                className="object-contain" 
+              />
+            </Link>
+          </div>
+
+          {/* 3. PROFILE / AUTH (Right) */}
+          {session ? (
+             <Link href="/profile">
+               {session.user?.image ? (
+                 <img 
+                   src={session.user.image} 
+                   alt="Profile" 
+                   className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                 />
+               ) : (
+                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                    <User size={18} className="text-gray-600" />
+                 </div>
+               )}
+             </Link>
+          ) : (
+             <Link href="/auth/login" className="p-2">
+                <User size={24} className="text-gray-700" />
+             </Link>
+          )}
+        </div>
+
+        {/* ==================== DESKTOP LAYOUT (Visible >= md) ==================== */}
+        <div className="hidden w-full items-center justify-between md:flex">
+          
+          {/* LEFT: Logo */}
+          <Link href="/" className="flex items-center">
+            <img 
+               src="/assets/Sinduri_Logo.PNG" 
+               width={100} 
+               height={20} 
+               alt="Logo" 
+               className="mt-2" 
+            />
+          </Link>
+
+          {/* CENTER: Navigation Links */}
+          <div className="flex gap-8 text-sm font-medium uppercase tracking-wide">
+            <Link href="/products" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/products")}`}>
+              Products
+            </Link>
+            <Link href="/wishlist" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/wishlist")}`}>
+              Wishlist
+            </Link>
+            <Link href="/about" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/about")}`}>
+              About
+            </Link>
+          </div>
+
+          {/* RIGHT: Icons & Auth */}
+          <div className="flex items-center gap-6">
+            <Link href="/cart" className="relative group hover:text-[var(--color-gold-primary)] transition">
+              <ShoppingBag size={20} />
+            </Link>
+            
+            {session ? (
+              <Link 
+                href="/profile"
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm font-medium text-gray-700 transition hover:border-[var(--color-gold-primary)] hover:bg-gray-50"
+              >
+                {session.user?.image ? (
+                  <img src={session.user.image} alt="Profile" className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
+                    <User size={14} />
+                  </div>
+                )}
+                <span>{session.user?.name?.split(" ")[0] || "Account"}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== MOBILE MENU DROPDOWN ==================== */}
+      {/* 1. 'absolute': Takes it out of flow so it overlays content 
+          2. 'top-full': Starts exactly at the bottom of the navbar
+          3. Transitions: We toggle opacity and translate-y to make it smooth
+          4. 'pointer-events-none': Prevents clicking when invisible
+      */}
+      <div 
+        className={`
+          absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl md:hidden
+          transition-all duration-300 ease-in-out origin-top z-40
+          ${isMobileMenuOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-5 invisible pointer-events-none"}
+        `}
+      >
+        <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
+          
+          {/* Search Bar */}
+          <div className="relative mb-2">
+             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+             <input 
+                type="text" 
+                placeholder="Search products..." 
+                className="w-full rounded-lg bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none focus:ring-1 focus:ring-black border border-gray-200"
+             />
+          </div>
+
           <Link 
             href="/products" 
-            className="text-sm font-medium text-gray-700 hover:text-yellow-600 transition"
+            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
-            Products
+            <ShoppingBag size={18} /> Shop Collection
           </Link>
           
           <Link 
             href="/wishlist" 
-            className="text-sm font-medium text-gray-700 hover:text-yellow-600 transition"
+            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
-            Wishlist
+            <Heart size={18} /> My Wishlist
           </Link>
-          
+
           <Link 
             href="/cart" 
-            className="text-sm font-medium text-gray-700 hover:text-yellow-600 transition"
+            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
-            Cart
+            <ShoppingBag size={18} /> My Cart
           </Link>
 
-          {/* Profile/Auth Section */}
-          {status === "loading" ? (
-            <div className="w-20 h-4 bg-gray-300 rounded animate-pulse" />
-          ) : session ? (
-            <div className="relative" ref={dropdownRef}>
-              {/* Profile Button */}
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-yellow-600 hover:bg-gray-50"
-              >
-                {session.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt="Profile"
-                    className="h-6 w-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-600/10">
-                    <User size={14} className="text-yellow-600" />
-                  </div>
-                )}
-                <span className="hidden sm:inline">
-                  {session.user?.name?.split(" ")[0] || "Profile"}
-                </span>
-              </button>
-
-              {/* Dropdown Menu */}
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
-                  {/* User Info */}
-                  <div className="border-b border-gray-100 p-4">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {session.user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">{session.user?.email}</p>
-                    {session.user?.phone && (
-                      <p className="mt-1 text-xs text-gray-400">📱 {session.user.phone}</p>
-                    )}
-                  </div>
-
-                  {/* Menu Items */}
-                  <div className="p-2">
-                    <Link
-                      href="/profile"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
-                    >
-                      <Settings size={16} />
-                      My Profile
-                    </Link>
-
-                    <Link
-                      href="/wishlist"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
-                    >
-                      <Heart size={16} />
-                      Wishlist
-                    </Link>
-
-                    <Link
-                      href="/cart"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
-                    >
-                      <ShoppingBag size={16} />
-                      Shopping Cart
-                    </Link>
-                  </div>
-
-                  {/* ✅ FIX 4: Sign Out Button */}
-                  <div className="border-t border-gray-100 p-2">
-                    <button
-                      onClick={handleSignOut}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
-                    >
-                      <LogOut size={16} />
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              href="/auth/login"
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+          {session && (
+            <Link 
+              href="/profile" 
+              className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-[var(--color-gold-primary)] transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Sign in
+               <User size={18} /> My Profile
             </Link>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, AlertCircle } from "lucide-react";
+import { Loader2,ArrowRight,ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
@@ -40,113 +40,101 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      
+      {/* MAIN CARD */}
+      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100">
         
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10">
-            <Lock className="h-8 w-8 text-[var(--color-gold-primary)]" />
-          </div>
-          <h1 className="font-serif text-2xl font-medium text-gray-900">
-            Admin Access
+        {/* HEADER SECTION */}
+        <div className="border-b border-gray-100 bg-white px-10 py-8 text-center">
+          <h1 className="font-serif text-3xl text-gray-900">
+            Sinduri Jewellers
           </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Sinduri Jewellers Management
+          <div className="mx-auto mt-3 h-0.5 w-12 bg-[var(--color-gold-primary)]" />
+          <p className="mt-3 text-xs font-medium uppercase tracking-widest text-gray-500">
+            Admin Portal
           </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            <AlertCircle size={16} />
-            {error}
-          </div>
-        )}
+        {/* FORM SECTION */}
+        <div className="p-10">
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-50 p-3 text-center text-sm font-medium text-red-600">
+              {error}
+            </div>
+          )}
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
-          
-          {/* Username */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+          <form onSubmit={handleLogin} className="space-y-6">
+            
+            {/* Username */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="
+                  w-full rounded-lg border border-gray-300 bg-white px-4 py-3 
+                  text-sm text-gray-900 placeholder-gray-300 transition-all
+                  focus:border-[var(--color-gold-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-gold-primary)]
+                "
+                placeholder="admin@sinduri.com"
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="
+                  w-full rounded-lg border border-gray-300 bg-white px-4 py-3 
+                  text-sm text-gray-900 placeholder-gray-300 transition-all
+                  focus:border-[var(--color-gold-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-gold-primary)]
+                "
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {/* Submit Button - GOLD THEME */}
+            <button
+              type="submit"
+              disabled={loading}
               className="
-                w-full rounded-lg 
-                border border-gray-200 
-                bg-white 
-                py-3 px-4 
-                text-sm text-gray-900
-                placeholder-gray-400
-                focus:border-[var(--color-gold-primary)] 
-                focus:outline-none 
-                focus:ring-2 
-                focus:ring-[var(--color-gold-primary)]/20
-                transition-all
+                group mt-2 flex w-full items-center justify-center gap-2 rounded-lg 
+                bg-[var(--color-gold-primary)] py-3.5 text-sm font-bold text-white shadow-sm 
+                transition-all hover:bg-[var(--color-gold-accent)] active:scale-[0.99]
+                disabled:opacity-70 disabled:cursor-not-allowed
               "
-              placeholder="Enter username"
-              required
-            />
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <>
+                  Secure Login
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* FOOTER */}
+        <div className="bg-gray-50 px-10 py-4 text-center border-t border-gray-100">
+          <div className="flex items-center justify-center gap-2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+            <ShieldCheck size={12} />
+            Encrypted Connection
           </div>
+        </div>
 
-          {/* Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="
-                w-full rounded-lg 
-                border border-gray-200 
-                bg-white 
-                py-3 px-4 
-                text-sm text-gray-900
-                placeholder-gray-400
-                focus:border-[var(--color-gold-primary)] 
-                focus:outline-none 
-                focus:ring-2 
-                focus:ring-[var(--color-gold-primary)]/20
-                transition-all
-              "
-              placeholder="Enter password"
-              required
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="
-              w-full rounded-lg 
-              bg-[var(--color-gold-primary)] 
-              py-3 text-sm font-semibold text-white 
-              transition-all
-              hover:bg-[var(--color-gold-accent)] 
-              focus:outline-none
-              focus:ring-2
-              focus:ring-[var(--color-gold-primary)]
-              focus:ring-offset-2
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-            "
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-gray-400">
-          Authorized personnel only
-        </p>
       </div>
     </div>
   );
