@@ -6,7 +6,7 @@ ALTER TABLE "products" ADD COLUMN "weight" DECIMAL(10,3);
 
 -- Copy price data to weight temporarily
 UPDATE "products"
-SET "weight" = "price" / 7000;
+SET "weight" = 1.000;
 
 -- ✅ Generate product_code using CTE (FIX)
 WITH ranked_products AS (
