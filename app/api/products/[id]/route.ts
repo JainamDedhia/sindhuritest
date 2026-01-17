@@ -1,58 +1,40 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { pool } from "@/app/lib/db";
+import { getProductById, deleteProduct } from "@/app/lib/dal/products";
 
 const GOLD_RATE_PER_GRAM = parseFloat(process.env.GOLD_RATE_PER_GRAM || "7000");
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string} >}
-){
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
-
     console.log(`Deleting Product Id: ${id}`);
-
-
-    await pool.query(`DELETE FROM products WHERE id = $1`, [id]);
+    
+    await deleteProduct(id);
 
     return NextResponse.json({
-      success: true, message: "Product deleted"
+      success: true,
+      message: "Product deleted"
     });
-  }
-  catch (error: any){
+  } catch (error: any) {
     console.log("DELETE ERROR: ", error.message);
     return NextResponse.json(
-      { error: "Delete Failed" ,details: error.message},
-      { status: 500}
+      { error: "Delete Failed", details: error.message },
+      { status: 500 }
     );
   }
 }
 
-
-
-
-
-
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }  // ✅ IMPORTANT: params is a Promise in Next.js 15
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Await the params
+    const { id } = await params;
     
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: {
-          select: { name: true },
-        },
-        images: {
-          orderBy: { position: "asc" },
-          select: { imageUrl: true, position: true },
-        },
-      },
-    });
+    const product = await getProductById(id);
 
     if (!product) {
       return NextResponse.json(
@@ -69,14 +51,15 @@ export async function GET(
       weight: product.weight.toString(),
       calculated_price: (parseFloat(product.weight.toString()) * GOLD_RATE_PER_GRAM).toFixed(0),
       is_sold_out: product.isSoldOut,
-      category_name: product.category?.name || null,
-      image_url: product.images[0]?.imageUrl || null,
-      all_images: product.images.map(img => img.imageUrl),
-      price: parseFloat((parseFloat(product.weight.toString()) * GOLD_RATE_PER_GRAM).toFixed(0)), // ✅ Add this for compatibility
-      title: product.name, // ✅ Add this for compatibility
-      category: product.category?.name || "Jewellery", // ✅ Add this
-      image: product.images[0]?.imageUrl || null, // ✅ Add this
-      inStock: !product.isSoldOut, // ✅ Add this
+      category_id: product.categoryId,
+      category_name: product.category_name,
+      image_url: product.images[0]?.image_url || null,
+      all_images: product.images.map(img => img.image_url),
+      price: parseFloat((parseFloat(product.weight.toString()) * GOLD_RATE_PER_GRAM).toFixed(0)),
+      title: product.name,
+      category: product.category_name || "Jewellery",
+      image: product.images[0]?.image_url || null,
+      inStock: !product.isSoldOut,
     };
 
     return NextResponse.json(transformed);
@@ -89,3 +72,51 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    
+    const { name, description, weight, product_code, category_id, images } = body;
+
+    // Update product
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        description,
+        weight,
+        productCode: product_code,
+        categoryId: category_id,
+      }
+    });
+
+    // Update images if provided
+    if (images && images.length > 0) {
+      // Delete old images
+      await prisma.productImage.deleteMany({
+        where: { productId: id }
+      });
+
+      // Create new images
+      await prisma.productImage.createMany({
+        data: images.map((url: string, index: number) => ({
+          productId: id,
+          imageUrl: url,
+          position: index
+        }))
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("UPDATE ERROR:", error);
+    return NextResponse.json(
+      { error: "Update failed", details: error.message },
+      { status: 500 }
+    );
+  }
+}

@@ -1,163 +1,182 @@
-import { NextResponse } from "next/server";
-import { pool } from "../db";
-import { randomUUID } from "crypto";
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
-interface CreateProductData{
-    name: string;
-    description: string;
-    weight: string;
-    product_code: string;
-    category_id: string;
-    images: string[];
+interface CreateProductData {
+  name: string;
+  description: string;
+  weight: string;
+  product_code: string;
+  category_id: string;
+  images: string[];
 }
 
+// ============= GET ALL PRODUCTS =============
 export async function getAllProducts() {
-    const { rows } = await pool.query(`
-      SELECT 
-        p.id,
-        p.name,
-        p.product_code,
-        p.weight, 
-        p.is_active,
-        p.is_sold_out,
-        p.is_featured,
-        c.name as category_id,
-        (
-          SELECT image_url FROM product_images 
-          WHERE product_id = p.id 
-          ORDER BY position ASC 
-          LIMIT 1
-        ) as image
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      ORDER BY p.created_at DESC
-    `);
-    return rows;
-    
+  const products = await prisma.product.findMany({
+    include: {
+      category: {
+        select: { name: true }
+      },
+      images: {
+        orderBy: { position: 'asc' },
+        take: 1
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return products.map(p => ({
+    id: p.id,
+    name: p.name,
+    product_code: p.productCode,
+    weight: p.weight.toString(),
+    is_active: p.isActive,
+    is_sold_out: p.isSoldOut,
+    is_featured: p.isFeatured,
+    category_id: p.category?.name || null,
+    image: p.images[0]?.imageUrl || null
+  }));
 }
 
+// ============= GET PRODUCT BY ID =============
 export async function getProductById(id: string) {
-    const productQuery =`
-        SELECT 
-        p.id, p.name, p.description, p.weight, p.product_code, 
-        p.category_id, p.is_active, p.is_sold_out, p.is_featured,
-        c.name as category_name
-        FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
-        WHERE p.id = $1
-    `;
-    const productRes = await pool.query(productQuery, [id]);
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      category: {
+        select: { name: true }
+      },
+      images: {
+        orderBy: { position: 'asc' }
+      }
+    }
+  });
 
-    if(productRes.rows.length === 0) return null;
-    const product = productRes.rows[0];
+  if (!product) return null;
 
-
-    const imagesQuery = `
-        SELECT id,image_url, position
-        FROM product_images
-        WHERE product_id = $1
-        ORDER BY position ASC
-    `;
-
-    const imagesRes = await pool.query(imagesQuery, [id]);
-
-    return {
-        ...product,
-        images: imagesRes.rows
-    };
+  return {
+    ...product,
+    category_name: product.category?.name || null,
+    images: product.images.map(img => ({
+      id: img.id,
+      image_url: img.imageUrl,
+      position: img.position
+    }))
+  };
 }
 
-export async function createProduct(data: CreateProductData){
-    const { name, description, weight, product_code, category_id, images } = data;
+// ============= CREATE PRODUCT =============
+export async function createProduct(data: CreateProductData) {
+  const { name, description, weight, product_code, category_id, images } = data;
 
-    const client = await pool.connect();
-
-    try{
-        await client.query('BEGIN');
-
-        const productId = randomUUID();
-
-        await client.query(
-            `INSERT INTO products (
-            id, name, description, weight, product_code, category_id, is_active, is_sold_out, updated_at) VALUES ($1, $2, $3, $4, $5, $6, true, false, NOW())`,
-            [productId, name, description, weight, product_code, category_id]
-        );
-
-        if(images && images.length > 0){
-            for(  let i = 0; i < images.length; i++){
-                const imageId = randomUUID();
-                await client.query(
-                    `INSERT INTO product_images (id, product_id, image_url, position)
-                    VALUES($1,$2,$3,$4, NOW())`,
-                    [imageId, productId, images[i], i]
-                );
-            }
-        }
-        await client.query('COMMIT');
-        return productId;
+  const product = await prisma.product.create({
+    data: {
+      name,
+      description,
+      weight: new Prisma.Decimal(weight),
+      productCode: product_code,
+      categoryId: category_id,
+      isActive: true,
+      isSoldOut: false,
+      images: {
+        create: images.map((url, index) => ({
+          imageUrl: url,
+          position: index
+        }))
+      }
     }
-    catch(error){
-        await client.query('ROLLBACK');
-        throw error;
-    }
-    finally{
-        client.release();
-    }
+  });
+
+  return product.id;
 }
 
-export async function updateProduct(id: string, data: Partial<CreateProductData>){
-    const {name, description, weight, product_code, category_id } = data;
+// ============= UPDATE PRODUCT =============
+export async function updateProduct(id: string, data: Partial<CreateProductData>) {
+  const { name, description, weight, product_code, category_id, images } = data;
 
-    const query = `
-        UPDATE products
-        SET 
-            name = $1,
-            description = $2,
-            weigth = $3,
-            product_code = $4,
-            category_id = $5,
-            updated_at = NOW()
-        WHERE id = $6
-    `;
-    await pool.query(query,[name,description,weight,product_code,category_id,id]);
+  const updateData: any = {};
+  
+  if (name) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (weight) updateData.weight = new Prisma.Decimal(weight);
+  if (product_code) updateData.productCode = product_code;
+  if (category_id) updateData.categoryId = category_id;
+
+  // Update product details
+  await prisma.product.update({
+    where: { id },
+    data: updateData
+  });
+
+  // Update images if provided
+  if (images && images.length > 0) {
+    // Delete old images
+    await prisma.productImage.deleteMany({
+      where: { productId: id }
+    });
+
+    // Create new images
+    await prisma.productImage.createMany({
+      data: images.map((url, index) => ({
+        productId: id,
+        imageUrl: url,
+        position: index
+      }))
+    });
+  }
 }
 
-export async function deleteProduct(id: string){
-    const client = await pool.connect();
-    try{
-        await client.query("BEGIN");
-
-        //Delete the Images of Product
-        await client.query(`DELETE FROM product_images WHERE product_id = $1`, [id]);
-
-        //Delete the Product Details and overall product
-        await client.query(`DELETE FROM products WHERE id = $1`, [id]);
-
-        await client.query("COMMIT");
-    }
-    catch(error){
-        await client.query("ROLLBACK");
-        throw error;
-    }
-    finally{
-        client.release();
-    }
+// ============= DELETE PRODUCT =============
+export async function deleteProduct(id: string) {
+  // Prisma will cascade delete images automatically
+  await prisma.product.delete({
+    where: { id }
+  });
 }
 
-export async function toggleProductStock(id: string, isSoldOut: boolean){
-    const query = `
-        UPDATE products
-        SET is_sold_out = $1, updated_at = NOW()
-        WHERE id = $2
-    `;
-    await pool.query(query,[isSoldOut, id]);
+// ============= TOGGLE STOCK STATUS =============
+export async function toggleProductStock(id: string, isSoldOut: boolean) {
+  await prisma.product.update({
+    where: { id },
+    data: { isSoldOut }
+  });
 }
 
-export async function toggleProductFeatured(id: string, status: boolean){
-    const query=`
-        UPDATE products
-        SET is_featured = $1, updated_at = NOW()
-        WHERE id = $2
-    `;
-    await pool.query(query, [status, id]);
+// ============= TOGGLE FEATURED STATUS =============
+export async function toggleProductFeatured(id: string, isFeatured: boolean) {
+  await prisma.product.update({
+    where: { id },
+    data: { isFeatured }
+  });
+}
+
+// ============= GET FEATURED PRODUCTS =============
+export async function getFeaturedProducts(limit: number = 8) {
+  const products = await prisma.product.findMany({
+    where: {
+      isFeatured: true,
+      isActive: true
+    },
+    include: {
+      category: {
+        select: { name: true }
+      },
+      images: {
+        orderBy: { position: 'asc' },
+        take: 1
+      }
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: limit
+  });
+
+  return products.map(p => ({
+    id: p.id,
+    name: p.name,
+    weight: p.weight.toString(),
+    description: p.description || "",
+    category_name: p.category?.name || "Jewellery",
+    image: p.images[0]?.imageUrl || null,
+    is_sold_out: p.isSoldOut
+  }));
 }

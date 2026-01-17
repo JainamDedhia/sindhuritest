@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/app/lib/db";
-import { randomUUID } from "crypto";
+import { getAllCategories, createCategory, deleteCategory } from "@/app/lib/dal/categories";
 
 // GET: Fetch all categories
 export async function GET() {
   try {
-    const { rows } = await pool.query(
-      `SELECT * FROM categories ORDER BY created_at DESC`
-    );
-    return NextResponse.json(rows);
+    const categories = await getAllCategories();
+    return NextResponse.json(categories);
   } catch (error: any) {
     console.error("FETCH CATEGORIES ERROR:", error.message);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
@@ -24,22 +21,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Category name is required" }, { status: 400 });
     }
 
-    const id = randomUUID();
+    const category = await createCategory(name);
 
-    await pool.query(
-      `INSERT INTO categories (id, name, is_active, updated_at) 
-       VALUES ($1, $2, true, NOW())`,
-      [id, name]
-    );
-
-    return NextResponse.json({ success: true, id, name });
-
+    return NextResponse.json({ success: true, id: category.id, name: category.name });
   } catch (error: any) {
     console.error("CREATE CATEGORY ERROR:", error.message);
-    
-    // Handle Unique Constraint (Duplicate Name)
-    if (error.code === '23505') {
-        return NextResponse.json({ error: "Category already exists" }, { status: 409 });
+
+    // Handle Prisma unique constraint error
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: "Category already exists" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
@@ -50,7 +40,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const { id } = await req.json();
-    await pool.query(`DELETE FROM categories WHERE id = $1`, [id]);
+    await deleteCategory(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });

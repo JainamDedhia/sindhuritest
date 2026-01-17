@@ -59,11 +59,13 @@ CREATE TABLE "categories" (
 -- CreateTable
 CREATE TABLE "products" (
     "id" TEXT NOT NULL,
+    "product_code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "price" DECIMAL(10,2) NOT NULL,
+    "weight" DECIMAL(10,3) NOT NULL,
     "category_id" TEXT,
     "is_sold_out" BOOLEAN NOT NULL DEFAULT false,
+    "is_featured" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -95,6 +97,32 @@ CREATE TABLE "banners" (
     CONSTRAINT "banners_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "settings" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "settings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "bento_items" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "subtitle" TEXT,
+    "image_url" TEXT NOT NULL,
+    "target_link" TEXT NOT NULL,
+    "size" TEXT NOT NULL DEFAULT 'small',
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "bento_items_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -120,16 +148,31 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "products_product_code_key" ON "products"("product_code");
+
+-- CreateIndex
 CREATE INDEX "products_category_id_idx" ON "products"("category_id");
 
 -- CreateIndex
 CREATE INDEX "products_is_active_is_sold_out_idx" ON "products"("is_active", "is_sold_out");
 
 -- CreateIndex
+CREATE INDEX "products_is_featured_idx" ON "products"("is_featured");
+
+-- CreateIndex
+CREATE INDEX "products_product_code_idx" ON "products"("product_code");
+
+-- CreateIndex
 CREATE INDEX "product_images_product_id_idx" ON "product_images"("product_id");
 
 -- CreateIndex
 CREATE INDEX "banners_device_type_position_idx" ON "banners"("device_type", "position");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "settings_key_key" ON "settings"("key");
+
+-- CreateIndex
+CREATE INDEX "bento_items_position_idx" ON "bento_items"("position");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

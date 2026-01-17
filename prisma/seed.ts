@@ -3,36 +3,17 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create categories
-  const ring = await prisma.category.upsert({
-    where: { name: 'Rings' },
+  // Seed gold rate
+  await prisma.setting.upsert({
+    where: { key: 'gold_rate' },
     update: {},
-    create: { name: 'Rings' },
+    create: {
+      key: 'gold_rate',
+      value: '7000'
+    }
   })
 
-  const necklace = await prisma.category.upsert({
-    where: { name: 'Necklaces' },
-    update: {},
-    create: { name: 'Necklaces' },
-  })
-
-  // Create a test product with a Cloudinary image
-  await prisma.product.create({
-    data: {
-      name: '22K Gold Ring',
-      description: 'Beautiful handcrafted gold ring',
-      price: 45000,
-      categoryId: ring.id,
-      images: {
-        create: {
-          imageUrl: 'https://res.cloudinary.com/demo/image/upload/sample.jpg', // Replace with your teammate's image
-          position: 0,
-        },
-      },
-    },
-  })
-
-  console.log('✅ Seeded products!')
+  console.log('✅ Seeded gold rate: 7000')
 }
 
 main()
