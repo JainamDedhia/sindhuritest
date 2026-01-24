@@ -3,20 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Menu, X, ShoppingBag, Heart, User, Search } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings } from "lucide-react";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const pathname = usePathname();
 
   // Helper to highlight active link
   const isActive = (path: string) => 
     pathname === path ? "text-[var(--color-gold-primary)]" : "text-gray-900";
 
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: "/" });
+    setShowProfileMenu(false);
+  };
+
   return (
-    // 'relative' is needed here so the absolute menu positions itself relative to this nav
     <nav className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-white/80 backdrop-blur-md shadow-sm relative">
       
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -29,7 +34,6 @@ export default function Navbar() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-2 -ml-2 text-gray-700 transition-colors hover:text-black"
           >
-            {/* Simple fade/rotation transition for icon could go here, keeping it simple for now */}
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} className="cursor-pointer" />}
           </button>
 
@@ -48,23 +52,59 @@ export default function Navbar() {
 
           {/* 3. PROFILE / AUTH (Right) */}
           {session ? (
-             <Link href="/profile">
-               {session.user?.image ? (
-                 <img 
-                   src={session.user.image} 
-                   alt="Profile" 
-                   className="h-8 w-8 rounded-full object-cover border border-gray-200"
-                 />
-               ) : (
-                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                    <User size={18} className="text-gray-600" />
-                 </div>
-               )}
-             </Link>
+            <div className="relative">
+              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="p-1">
+                {session.user?.image ? (
+                  <img 
+                    src={session.user.image} 
+                    alt="Profile" 
+                    className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`${session.user?.image ? 'hidden' : ''} h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200`}>
+                  <User size={18} className="text-gray-600" />
+                </div>
+              </button>
+
+              {/* Mobile Profile Dropdown */}
+              {showProfileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <p className="font-medium text-sm text-gray-900">{session.user?.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
+                    </div>
+                    <div className="p-2">
+                      <Link 
+                        href="/profile" 
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <Settings size={16} />
+                        My Profile
+                      </Link>
+                      <button 
+                        onClick={handleSignOut}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <LogOut size={16} />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
-             <Link href="/auth/login" className="p-2">
-                <User size={24} className="text-gray-700" />
-             </Link>
+            <Link href="/auth/login" className="p-2">
+              <User size={24} className="text-gray-700" />
+            </Link>
           )}
         </div>
 
@@ -74,11 +114,11 @@ export default function Navbar() {
           {/* LEFT: Logo */}
           <Link href="/" className="flex items-center">
             <img 
-               src="/assets/Sinduri_Logo.PNG" 
-               width={100} 
-               height={20} 
-               alt="Logo" 
-               className="mt-2" 
+              src="/assets/Sinduri_Logo.PNG" 
+              width={100} 
+              height={20} 
+              alt="Logo" 
+              className="mt-2" 
             />
           </Link>
 
@@ -102,19 +142,58 @@ export default function Navbar() {
             </Link>
             
             {session ? (
-              <Link 
-                href="/profile"
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm font-medium text-gray-700 transition hover:border-[var(--color-gold-primary)] hover:bg-gray-50"
-              >
-                {session.user?.image ? (
-                  <img src={session.user.image} alt="Profile" className="h-6 w-6 rounded-full object-cover" />
-                ) : (
-                  <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm font-medium text-gray-700 transition hover:border-[var(--color-gold-primary)] hover:bg-gray-50"
+                >
+                  {session.user?.image ? (
+                    <img 
+                      src={session.user.image} 
+                      alt="Profile" 
+                      className="h-6 w-6 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`${session.user?.image ? 'hidden' : ''} h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center`}>
                     <User size={14} />
                   </div>
+                  <span>{session.user?.name?.split(" ")[0] || "Account"}</span>
+                </button>
+
+                {/* Desktop Profile Dropdown */}
+                {showProfileMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                      <div className="p-4 border-b border-gray-100">
+                        <p className="font-medium text-sm text-gray-900">{session.user?.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link 
+                          href="/profile" 
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <Settings size={16} />
+                          My Profile
+                        </Link>
+                        <button 
+                          onClick={handleSignOut}
+                          className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <LogOut size={16} />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
-                <span>{session.user?.name?.split(" ")[0] || "Account"}</span>
-              </Link>
+              </div>
             ) : (
               <Link
                 href="/auth/login"
@@ -128,11 +207,6 @@ export default function Navbar() {
       </div>
 
       {/* ==================== MOBILE MENU DROPDOWN ==================== */}
-      {/* 1. 'absolute': Takes it out of flow so it overlays content 
-          2. 'top-full': Starts exactly at the bottom of the navbar
-          3. Transitions: We toggle opacity and translate-y to make it smooth
-          4. 'pointer-events-none': Prevents clicking when invisible
-      */}
       <div 
         className={`
           absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl md:hidden
@@ -144,12 +218,12 @@ export default function Navbar() {
           
           {/* Search Bar */}
           <div className="relative mb-2">
-             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-             <input 
-                type="text" 
-                placeholder="Search products..." 
-                className="w-full rounded-lg bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none focus:ring-1 focus:ring-black border border-gray-200"
-             />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              className="w-full rounded-lg bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none focus:ring-1 focus:ring-black border border-gray-200"
+            />
           </div>
 
           <Link 
@@ -177,13 +251,24 @@ export default function Navbar() {
           </Link>
 
           {session && (
-            <Link 
-              href="/profile" 
-              className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-[var(--color-gold-primary)] transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-               <User size={18} /> My Profile
-            </Link>
+            <>
+              <Link 
+                href="/profile" 
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-[var(--color-gold-primary)] transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User size={18} /> My Profile
+              </Link>
+              <button 
+                onClick={() => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 py-2 text-red-600 hover:text-red-700 transition-colors"
+              >
+                <LogOut size={18} /> Sign Out
+              </button>
+            </>
           )}
         </div>
       </div>
