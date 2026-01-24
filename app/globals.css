@@ -176,3 +176,24 @@ select:disabled {
 .admin-title {
   @apply text-lg font-semibold text-neutral-800;
 }
+
+/* Add this at the end of your globals.css file */
+
+/* ===============================
+   TOAST ANIMATION
+================================ */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link"; // ADD THIS
+import Link from "next/link";
 import { Heart, ShoppingBag, MessageCircle, Check } from "lucide-react";
+import { useCartStore } from "@/app/store/cartStore";
+import { useWishlistStore } from "@/app/store/wishlistStore";
+import { useUIStore } from "@/app/store/uiStore";
 
 interface ProductProps {
   id: number | string;
@@ -15,83 +17,69 @@ interface ProductProps {
 }
 
 export default function ProductCard({ product }: { product: ProductProps }) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
-
   const ADMIN_PHONE_NUMBER = "917021419016";
 
+  // Zustand stores
+  const addToCart = useCartStore((state) => state.addItem);
+  const isInCart = useCartStore((state) => state.isInCart(product.id));
+  
+  const toggleWishlist = useWishlistStore((state) => state.toggleItem);
+  const isWishlisted = useWishlistStore((state) => state.isWishlisted(product.id));
+  
+  const showToast = useUIStore((state) => state.showToast);
 
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
-    if (savedWishlist) {
-      const items = JSON.parse(savedWishlist);
-      setIsWishlisted(items.some((i: any) => i.id === product.id));
-    }
-
-    const savedCart = localStorage.getItem("cart");
-    if(savedCart) {
-      const cartItems = JSON.parse(savedCart);
-      setIsInCart(cartItems.some((i: any) => i.id === product.id));
-    }
-  },[product.id]);
-
-  const toggleWishlist = (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const saved = localStorage.getItem("wishlist");
-    let items = saved ? JSON.parse(saved) : [];
+    addToCart({
+      id: product.id,
+      title: product.title,
+      category: product.category,
+      description: product.description,
+      weight: parseFloat(product.weight),
+      image: product.image,
+    });
 
-    if (isWishlisted) {
-      items = items.filter((i: ProductProps) => i.id !== product.id);
-    } else {
-      items.push(product);
-    }
-
-    localStorage.setItem("wishlist", JSON.stringify(items));
-    setIsWishlisted(!isWishlisted);
-    window.dispatchEvent(new Event("wishlist-updated"));
+    showToast(`${product.title} added to cart!`, "success");
   };
 
-  const addToCart = (e: React.MouseEvent) => {
+  const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const saved = localStorage.getItem("cart");
-    const cartItems = saved ? JSON.parse(saved) : [];
+    toggleWishlist({
+      id: product.id,
+      title: product.title,
+      category: product.category,
+      description: product.description,
+      weight: product.weight,
+      image: product.image,
+      inStock: product.inStock,
+    });
 
-    const existingItemIndex = cartItems.findIndex((item: any) => item.id === product.id);
-
-    if(existingItemIndex > -1){
-      cartItems[existingItemIndex].quantity += 1;
-    }
-    else{
-      cartItems.push({ ...product, quantity: 1});
-    }
-
-    localStorage.setItem("cart",JSON.stringify(cartItems));
-    setIsInCart(true);
-    window.dispatchEvent(new Event("cart-updated"));
+    const action = isWishlisted ? "removed from" : "added to";
+    showToast(`${product.title} ${action} wishlist!`, isWishlisted ? "info" : "success");
   };
 
   const handleEnquire = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); 
-    
+    e.stopPropagation();
+
     const message = `Hello, I am interested in this Product: 
-    *${product.title}* 
-    Category: ${product.category} 
-    Price: ${product.weight} 
-    
-    *Image*: ${product.image}`;
+*${product.title}* 
+Category: ${product.category} 
+Weight: ${product.weight}g
+
+*Image*: ${product.image}`;
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${ADMIN_PHONE_NUMBER}?text=${encodedMessage}`;
-    window.open(whatsappUrl,'_blank');
-  }
+    window.open(whatsappUrl, "_blank");
+  };
 
   return (
-    <Link href={`/products/${product.id}`}> {/* WRAP WITH LINK */}
+    <Link href={`/products/${product.id}`}>
       <div
         className="
           group relative w-full overflow-hidden
@@ -112,15 +100,16 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           />
 
           <button
-            onClick={toggleWishlist}
+            onClick={handleToggleWishlist}
             className={`
               absolute top-3 right-3
               flex h-8 w-8 items-center justify-center
               rounded-full shadow-sm backdrop-blur-sm
               transition-all duration-300
-              ${isWishlisted 
-                ? "bg-red-50 text-red-500 opacity-100 translate-y-0"
-                : "bg-white/90 text-gray-700 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-red-50 hover:text-red-500"
+              ${
+                isWishlisted
+                  ? "bg-red-50 text-red-500 opacity-100 translate-y-0"
+                  : "bg-white/90 text-gray-700 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-red-50 hover:text-red-500"
               }
             `}
           >
@@ -150,21 +139,26 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button onClick={addToCart}
+            <button
+              onClick={handleAddToCart}
               className={`
                 flex flex-1 items-center justify-center gap-2
                 rounded-lg border h-9
                 text-[12px] font-semibold 
                 transition-all duration-200
                 active:scale-95
-                ${isInCart ? "border-green-600 bg-green-50 text-green-700 hover:bg-green-100" : "border-gray-200 bg-white text-gray-700 hover:border-gray-900 hover:text-gray-900"}
+                ${
+                  isInCart
+                    ? "border-green-600 bg-green-50 text-green-700 hover:bg-green-100"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-900 hover:text-gray-900"
+                }
               `}
             >
               {isInCart ? (
                 <>
                   <Check size={14} /> Added
                 </>
-              ): (
+              ) : (
                 <>
                   <ShoppingBag size={14} /> Add
                 </>

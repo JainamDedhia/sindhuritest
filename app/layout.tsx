@@ -1,10 +1,11 @@
 "use client";
 
-import "./globals.css"
-import Navbar from "./components/Navbar"
-import Footer from "./components/Footer"
-import AuthSessionProvider from "./components/SessionProvider"
-import { usePathname } from "next/navigation"
+import "./globals.css";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Toast from "./components/Toast";
+import AuthSessionProvider from "./components/SessionProvider";
+import { usePathname } from "next/navigation";
 
 /**
  * ROOT LAYOUT
@@ -27,12 +28,15 @@ export default function RootLayout({
         <AuthSessionProvider>
           {/* Only show Navbar + Footer for NON-admin routes */}
           {!isAdminRoute && <Navbar />}
-          
+
           <main className={!isAdminRoute ? "min-h-screen" : ""}>
             {children}
           </main>
-          
+
           {!isAdminRoute && <Footer />}
+
+          {/* Global Toast Notification */}
+          <Toast />
         </AuthSessionProvider>
       </body>
     </html>
