@@ -12,10 +12,18 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
-    if (status === "authenticated" && session) {
-      window.location.href = callbackUrl
+  if (status === "authenticated" && session) {
+    const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
+    
+    if (hasCompletedOnboarding !== "true") {
+      // New user - redirect to onboarding
+      window.location.href = "/onboarding";
+    } else {
+      // Existing user - redirect to callback URL
+      window.location.href = callbackUrl;
     }
-  }, [status, session, callbackUrl])
+  }
+}, [status, session, callbackUrl]);
 
   const handleSignIn = async () => {
     setIsSigningIn(true)

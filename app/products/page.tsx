@@ -208,132 +208,165 @@ function ProductContent() {
       </div>
 
       {/* 🔥 FILTER MODAL */}
-      {isFilterOpen && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsFilterOpen(false)}
-          />
-          
-          {/* Filter Panel */}
-          <div className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl overflow-y-auto">
-            
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <SlidersHorizontal size={20} className="text-gray-600" />
-                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
-                {activeFiltersCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-xs font-bold text-white">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => setIsFilterOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <X size={20} />
-              </button>
+      {/* 🔥 CENTERED FILTER MODAL */}
+{isFilterOpen && (
+  <>
+    {/* Backdrop with blur */}
+    <div 
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={() => setIsFilterOpen(false)}
+    />
+    
+    {/* ✨ CENTERED FILTER PANEL */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div 
+        className="w-full max-w-2xl max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        
+        {/* Header with Gold Accent */}
+        <div className="sticky top-0 bg-gradient-to-r from-white via-[var(--color-gold-primary)]/5 to-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10">
+              <SlidersHorizontal size={24} className="text-[var(--color-gold-primary)]" />
             </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 font-serif">Refine Your Search</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {activeFiltersCount > 0 ? `${activeFiltersCount} active filters` : 'No filters applied'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsFilterOpen(false)}
+            className="p-3 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X size={24} className="text-gray-600" />
+          </button>
+        </div>
 
-            {/* Filter Content */}
-            <div className="p-6 space-y-8">
-              
-              {/* CATEGORIES */}
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto max-h-[calc(85vh-180px)] px-8 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            {/* LEFT COLUMN: CATEGORIES */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500">
                   Categories
                 </h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                  {categories.length} total
+                </span>
+              </div>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                {categories.map((category) => {
+                  const count = products.filter(p => p.category_name === category.name).length;
+                  return (
                     <label
                       key={category.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+                      className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all ${
+                        selectedCategories.includes(category.name)
+                          ? 'bg-[var(--color-gold-primary)]/10 border-2 border-[var(--color-gold-primary)] shadow-sm'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
                     >
                       <input
                         type="checkbox"
                         checked={selectedCategories.includes(category.name)}
                         onChange={() => toggleCategory(category.name)}
-                        className="h-4 w-4 rounded border-gray-300 text-[var(--color-gold-primary)] focus:ring-[var(--color-gold-primary)]"
+                        className="h-5 w-5 rounded border-gray-300 text-[var(--color-gold-primary)] focus:ring-[var(--color-gold-primary)]"
                       />
-                      <span className="text-sm text-gray-700">{category.name}</span>
-                      <span className="ml-auto text-xs text-gray-400">
-                        ({products.filter(p => p.category_name === category.name).length})
+                      <span className="flex-1 text-sm font-medium text-gray-700">
+                        {category.name}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-400 bg-white px-2 py-1 rounded-full">
+                        {count}
                       </span>
                     </label>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
+            </div>
 
-              {/* STOCK STATUS */}
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">
+            {/* RIGHT COLUMN: AVAILABILITY & SORTING */}
+            <div className="space-y-8">
+              
+              {/* AVAILABILITY */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500">
                   Availability
                 </h3>
                 <div className="space-y-2">
                   {[
-                    { value: "all", label: "All Items" },
-                    { value: "inStock", label: "In Stock Only" },
-                    { value: "soldOut", label: "Sold Out" },
+                    { value: "all", label: "All Items", icon: "📦" },
+                    { value: "inStock", label: "In Stock Only", icon: "✅" },
+                    { value: "soldOut", label: "Sold Out", icon: "❌" },
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+                      className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all ${
+                        stockFilter === option.value
+                          ? 'bg-blue-50 border-2 border-blue-500 shadow-sm'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
                     >
                       <input
                         type="radio"
                         name="stock"
                         checked={stockFilter === option.value}
                         onChange={() => setStockFilter(option.value as any)}
-                        className="h-4 w-4 border-gray-300 text-[var(--color-gold-primary)] focus:ring-[var(--color-gold-primary)]"
+                        className="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">{option.label}</span>
+                      <span className="text-xl">{option.icon}</span>
+                      <span className="text-sm font-medium text-gray-700">{option.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               {/* SORT BY */}
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500">
                   Sort By
                 </h3>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[var(--color-gold-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold-primary)]/20"
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-medium focus:border-[var(--color-gold-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold-primary)]/20"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="nameAsc">Name (A-Z)</option>
-                  <option value="nameDesc">Name (Z-A)</option>
-                  <option value="weightAsc">Weight (Low to High)</option>
-                  <option value="weightDesc">Weight (High to Low)</option>
+                  <option value="newest">✨ Newest First</option>
+                  <option value="nameAsc">🔤 Name (A-Z)</option>
+                  <option value="nameDesc">🔤 Name (Z-A)</option>
+                  <option value="weightAsc">⚖️ Weight (Low to High)</option>
+                  <option value="weightDesc">⚖️ Weight (High to Low)</option>
                 </select>
               </div>
 
             </div>
-
-            {/* Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex gap-3">
-              <button
-                onClick={clearFilters}
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-              >
-                Clear All
-              </button>
-              <button
-                onClick={() => setIsFilterOpen(false)}
-                className="flex-1 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition"
-              >
-                View {filteredProducts.length} Items
-              </button>
-            </div>
-
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-6 flex gap-4">
+          <button
+            onClick={clearFilters}
+            className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-6 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            Clear All Filters
+          </button>
+          <button
+            onClick={() => setIsFilterOpen(false)}
+            className="flex-1 rounded-xl bg-gradient-to-r from-[var(--color-gold-primary)] to-[var(--color-gold-accent)] px-6 py-4 text-sm font-semibold text-white hover:shadow-lg transition-all"
+          >
+            View {filteredProducts.length} Products
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </>
+)}
     </div>
   );
 }
