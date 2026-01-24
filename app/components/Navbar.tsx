@@ -19,6 +19,10 @@ export default function Navbar() {
   
   const cartCount = useCartStore((state) => state.totalItems());
   const wishlistCount = useWishlistStore((state) => state.totalItems());
+  
+  // 🔥 Get logout handlers
+  const clearCart = useCartStore((state) => state.handleLogout);
+  const clearWishlist = useWishlistStore((state) => state.clearWishlist);
 
   useEffect(() => {
     setMounted(true);
@@ -27,9 +31,20 @@ export default function Navbar() {
   const isActive = (path: string) => 
     pathname === path ? "text-[var(--color-gold-primary)]" : "text-gray-900";
 
+  // 🔥 FIXED LOGOUT HANDLER
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    console.log("🚪 Logging out and clearing data...");
+    
+    // Clear stores BEFORE signing out
+    clearCart();
+    clearWishlist();
+    
+    // Close menus
     setShowProfileMenu(false);
+    setIsMobileMenuOpen(false);
+    
+    // Sign out
+    await signOut({ callbackUrl: "/" });
   };
 
   return (
@@ -140,7 +155,6 @@ export default function Navbar() {
             {/* CART WITH COUNT BADGE */}
             <Link href="/cart" className="relative group hover:text-[var(--color-gold-primary)] transition">
               <ShoppingBag size={20} />
-              {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
               {mounted && cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
                   {cartCount}
@@ -151,7 +165,6 @@ export default function Navbar() {
             {/* WISHLIST WITH COUNT BADGE */}
             <Link href="/wishlist" className="relative group hover:text-[var(--color-gold-primary)] transition">
               <Heart size={20} />
-              {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
               {mounted && wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                   {wishlistCount}
@@ -255,7 +268,6 @@ export default function Navbar() {
             <span className="flex items-center gap-3">
               <Heart size={18} /> My Wishlist
             </span>
-            {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
             {mounted && wishlistCount > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {wishlistCount}
@@ -271,7 +283,6 @@ export default function Navbar() {
             <span className="flex items-center gap-3">
               <ShoppingBag size={18} /> My Cart
             </span>
-            {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
             {mounted && cartCount > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
                 {cartCount}
@@ -289,10 +300,7 @@ export default function Navbar() {
                 <User size={18} /> My Profile
               </Link>
               <button 
-                onClick={() => {
-                  handleSignOut();
-                  setIsMobileMenuOpen(false);
-                }}
+                onClick={handleSignOut}
                 className="flex items-center gap-3 py-2 text-red-600 hover:text-red-700 transition-colors"
               >
                 <LogOut size={18} /> Sign Out

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { Heart, ShoppingBag, MessageCircle, Check, AlertCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useUIStore } from "@/app/store/uiStore";
@@ -19,6 +21,8 @@ interface ProductProps {
 
 export default function ProductCard({ product }: { product: ProductProps }) {
   const ADMIN_PHONE_NUMBER = "917021419016";
+  const { data: session } = useSession();
+  const router = useRouter();
   
   const [isAdding, setIsAdding] = useState(false);
 
@@ -34,6 +38,15 @@ export default function ProductCard({ product }: { product: ProductProps }) {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 🔥 CHECK IF USER IS LOGGED IN FIRST
+    if (!session) {
+      showToast("Please sign in to add items to cart", "info");
+      setTimeout(() => {
+        router.push("/auth/login?callbackUrl=" + window.location.pathname);
+      }, 1000);
+      return;
+    }
 
     // ✅ CHECK STOCK BEFORE ADDING
     if (!product.inStock) {
@@ -54,6 +67,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         inStock: product.inStock,
       });
 
+      // 🔥 SHOW TOAST AFTER SUCCESSFUL ADD
       showToast(`${product.title} added to cart!`, "success");
       
     } catch (error: any) {
@@ -62,6 +76,9 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         showToast("This item is currently sold out", "error");
       } else if (error.message.includes("Unauthorized")) {
         showToast("Please sign in to add items to cart", "info");
+        setTimeout(() => {
+          router.push("/auth/login?callbackUrl=" + window.location.pathname);
+        }, 1000);
       } else {
         showToast(error.message || "Failed to add to cart", "error");
       }
@@ -74,6 +91,15 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     e.preventDefault();
     e.stopPropagation();
 
+    // 🔥 CHECK IF USER IS LOGGED IN
+    if (!session) {
+      showToast("Please sign in to save items", "info");
+      setTimeout(() => {
+        router.push("/auth/login?callbackUrl=" + window.location.pathname);
+      }, 1000);
+      return;
+    }
+
     toggleWishlist({
       id: product.id,
       title: product.title,
@@ -84,6 +110,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
       inStock: product.inStock,
     });
 
+    // 🔥 SHOW TOAST
     const action = isWishlisted ? "removed from" : "added to";
     showToast(`${product.title} ${action} wishlist!`, isWishlisted ? "info" : "success");
   };
@@ -158,7 +185,7 @@ Weight: ${product.weight}g
 
         <div className="p-4">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-gold-primary)]">
                 {product.category}
               </p>
@@ -166,8 +193,9 @@ Weight: ${product.weight}g
                 {product.title}
               </h3>
             </div>
+            {/* 🔥 ONLY SHOW WEIGHT, NO PRICE */}
             <span className="shrink-0 text-[14px] font-bold text-gray-900">
-              {product.weight} g
+              {product.weight}g
             </span>
           </div>
 

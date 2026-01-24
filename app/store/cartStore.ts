@@ -29,6 +29,9 @@ interface CartStore {
   syncWithBackend: () => Promise<void>;
   loadFromBackend: () => Promise<void>;
   
+  // 🔥 NEW: Handle logout
+  handleLogout: () => void;
+  
   // Computed
   totalItems: () => number;
   subtotal: () => number;
@@ -236,6 +239,18 @@ export const useCartStore = create<CartStore>()(
         } finally {
           set({ isLoading: false });
         }
+      },
+
+      // 🔥 ============= HANDLE LOGOUT =============
+      handleLogout: () => {
+        console.log("🧹 Clearing cart on logout");
+        set({ 
+          items: [], 
+          isSynced: false,
+          isLoading: false,
+          error: null
+        });
+        window.dispatchEvent(new Event("cart-updated"));
       },
 
       // ============= COMPUTED VALUES =============

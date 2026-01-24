@@ -6,18 +6,7 @@ import { useCartStore } from "@/app/store/cartStore";
 
 export default function CartPage() {
   // 🔥 USE ZUSTAND STORE
-  const { items, updateQuantity, removeItem, subtotal } = useCartStore();
-  
-  const shipping = subtotal() > 50000 ? 0 : 500;
-  const total = subtotal() + shipping;
-
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const { items, updateQuantity, removeItem } = useCartStore();
 
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
@@ -90,14 +79,14 @@ export default function CartPage() {
                       </button>
                     </div>
 
-                    {/* PRICE */}
+                    {/* 🔥 SHOW WEIGHT ONLY, NO PRICE */}
                     <div className="text-right">
                        <p className="text-sm font-bold text-gray-900">
-                         {formatPrice(item.weight * item.quantity)}
+                         {item.weight * item.quantity}g
                        </p>
                        {item.quantity > 1 && (
                          <p className="text-[10px] text-gray-500">
-                           {formatPrice(item.weight)} each
+                           {item.weight}g each
                          </p>
                        )}
                     </div>
@@ -107,35 +96,30 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* ORDER SUMMARY */}
+          {/* ORDER SUMMARY - NO PRICES */}
           <div className="h-fit w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:w-96 lg:sticky lg:top-4">
-            <h2 className="mb-6 text-lg font-bold text-gray-900">Order Summary</h2>
+            <h2 className="mb-6 text-lg font-bold text-gray-900">Cart Summary</h2>
 
             <div className="space-y-3 border-b border-gray-100 pb-4 text-sm">
               <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal())}</span>
+                <span>Total Items</span>
+                <span className="font-semibold">{items.reduce((sum, item) => sum + item.quantity, 0)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span className={shipping === 0 ? "text-green-600" : ""}>
-                  {shipping === 0 ? "Free" : formatPrice(shipping)}
+                <span>Total Weight</span>
+                <span className="font-semibold">
+                  {items.reduce((sum, item) => sum + (item.weight * item.quantity), 0).toFixed(2)}g
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 flex justify-between text-base font-bold text-gray-900">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-
             <button className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-gold-primary)] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-gold-accent)] active:scale-95">
-              Enquire about this Product
+              Enquire about this Order
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </button>
 
             <p className="mt-4 text-center text-xs text-gray-400">
-              Secure Checkout • Free Returns
+              Contact us for pricing • Free Returns
             </p>
           </div>
 

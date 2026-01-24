@@ -57,7 +57,9 @@ export const useWishlistStore = create<WishlistStore>()(
         }
       },
 
+      // 🔥 This now also works as handleLogout
       clearWishlist: () => {
+        console.log("🧹 Clearing wishlist");
         set({ items: [] });
         window.dispatchEvent(new Event("wishlist-updated"));
       },

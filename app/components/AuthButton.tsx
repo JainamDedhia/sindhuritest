@@ -4,12 +4,18 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { User, LogOut, Settings, ShoppingBag, Heart } from "lucide-react";
+import { useCartStore } from "@/app/store/cartStore";
+import { useWishlistStore } from "@/app/store/wishlistStore";
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // 🔥 Get cart and wishlist clear functions
+  const clearCart = useCartStore((state) => state.handleLogout);
+  const clearWishlist = useWishlistStore((state) => state.clearWishlist);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -22,6 +28,18 @@ export default function AuthButton() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 🔥 FIXED LOGOUT HANDLER
+  const handleSignOut = async () => {
+    console.log("🚪 User signing out...");
+    
+    // Clear cart and wishlist BEFORE signing out
+    clearCart();
+    clearWishlist();
+    
+    // Sign out
+    await signOut({ callbackUrl: "/" });
+  };
 
   if (status === "loading") {
     return <div className="w-20 h-4 bg-gray-300 rounded animate-pulse" />;
@@ -63,7 +81,7 @@ export default function AuthButton() {
 
       {/* Dropdown Menu */}
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg">
+        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
           {/* User Info */}
           <div className="border-b border-gray-100 p-4">
             <p className="text-sm font-semibold text-gray-900">
@@ -111,7 +129,7 @@ export default function AuthButton() {
           {/* Sign Out */}
           <div className="border-t border-gray-100 p-2">
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={handleSignOut}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
             >
               <LogOut size={16} />
