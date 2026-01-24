@@ -1,9 +1,11 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
-const authResult = NextAuth({
+// ✅ Create the auth instance
+const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
   providers: [
@@ -30,8 +32,12 @@ const authResult = NextAuth({
     },
   },
 
-  debug: true, // Enable this to see auth errors in console
+  debug: true,
 })
 
-export const GET = authResult.handlers.GET
-export const POST = authResult.handlers.POST
+// ✅ Export the auth function so other files can use it
+export { auth }
+
+// ✅ Export route handlers
+export const GET = handlers.GET
+export const POST = handlers.POST

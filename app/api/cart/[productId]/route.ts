@@ -1,6 +1,6 @@
 // app/api/cart/[productId]/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/app/api/auth/[...nextauth]/route"; // ✅ Import from YOUR route
 import { updateCartQuantity, removeFromCart, getUserCart } from "@/app/lib/dal/cart";
 
 // PATCH - Update quantity
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -52,7 +52,7 @@ export async function DELETE(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json(

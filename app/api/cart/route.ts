@@ -1,12 +1,12 @@
 // app/api/cart/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/app/api/auth/[...nextauth]/route"; // ✅ Import from YOUR route
 import { getUserCart, addToCart, syncLocalCartToDb } from "@/app/lib/dal/cart";
 
 // GET - Fetch user's cart
 export async function GET() {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -30,7 +30,7 @@ export async function GET() {
 // POST - Add item to cart or sync local cart
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -71,7 +71,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Cart POST Error:", error);
     
-    // Handle specific errors
     if (error.message === "Product not found") {
       return NextResponse.json(
         { error: "Product not found" },
