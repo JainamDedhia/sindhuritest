@@ -12,25 +12,32 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
-  if (status === "authenticated" && session) {
-    const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
-    
-    if (hasCompletedOnboarding !== "true") {
-      // New user - redirect to onboarding
-      window.location.href = "/onboarding";
-    } else {
-      // Existing user - redirect to callback URL
-      window.location.href = callbackUrl;
+    if (status === "authenticated" && session?.user) {
+      console.log("✅ User authenticated, checking onboarding status...");
+      
+      // IMPORTANT: Small delay to ensure localStorage is accessible
+      setTimeout(() => {
+        const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
+        console.log("📝 Onboarding status:", hasCompletedOnboarding);
+        
+        if (hasCompletedOnboarding !== "true") {
+          console.log("🔄 Redirecting to onboarding...");
+          window.location.href = "/onboarding";
+        } else {
+          console.log("🏠 Redirecting to:", callbackUrl);
+          window.location.href = callbackUrl;
+        }
+      }, 100); // Small delay
     }
-  }
-}, [status, session, callbackUrl]);
+  }, [status, session, callbackUrl]);
 
   const handleSignIn = async () => {
     setIsSigningIn(true)
+    console.log("🔐 Starting Google sign-in...");
     try {
-      await signIn("google", { callbackUrl })
+      await signIn("google", { callbackUrl: "/auth/login" }) // Redirect back to login page after auth
     } catch (error) {
-      console.error("Sign in error:", error)
+      console.error("❌ Sign in error:", error)
       setIsSigningIn(false)
     }
   }
@@ -39,7 +46,12 @@ export default function LoginPage() {
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold-primary)]" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <p className="text-sm text-gray-500">
+            {status === "loading" ? "Loading..." : "Redirecting..."}
+          </p>
+        </div>
       </div>
     )
   }
