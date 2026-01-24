@@ -1,69 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Minus, Plus, ArrowRight, ShoppingBag } from "lucide-react";
-
-interface CartItem {
-  id: number | string;
-  title: string;
-  category: string;
-  price: number;
-  weight: number;
-  image: string;
-  quantity: number;
-}
+import { useCartStore } from "@/app/store/cartStore";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // 1. Load Cart
-  useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) {
-      setCartItems(JSON.parse(saved));
-    }
-    setLoading(false);
-  }, []);
-
-  // 2. Update LocalStorage whenever cartItems change
-  const updateCart = (newItems: CartItem[]) => {
-    setCartItems(newItems);
-    localStorage.setItem("cart", JSON.stringify(newItems));
-    window.dispatchEvent(new Event("cart-updated")); // Update Navbar count
-  };
-
-  // 3. Actions
-  const incrementQty = (id: number | string) => {
-    const newItems = cartItems.map((item) =>
-      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-    );
-    updateCart(newItems);
-  };
-
-  const decrementQty = (id: number | string) => {
-    const newItems = cartItems.map((item) => {
-      if (item.id === id) {
-        return { ...item, quantity: Math.max(1, item.quantity - 1) };
-      }
-      return item;
-    });
-    updateCart(newItems);
-  };
-
-  const removeItem = (id: number | string) => {
-    const newItems = cartItems.filter((item) => item.id !== id);
-    updateCart(newItems);
-  };
-
-  // 4. Calculations
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.weight * item.quantity,
-    0
-  );
-  const shipping = subtotal > 50000 ? 0 : 500; // Free shipping over 50k logic
-  const total = subtotal + shipping;
+  // 🔥 USE ZUSTAND STORE
+  const { items, updateQuantity, removeItem, subtotal } = useCartStore();
+  
+  const shipping = subtotal() > 50000 ? 0 : 500;
+  const total = subtotal() + shipping;
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -73,14 +19,11 @@ export default function CartPage() {
     }).format(amount);
   };
 
-  if (loading) return null;
-
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
-      <h1 className="mb-8 text-2xl font-bold">Shopping Bag ({cartItems.length})</h1>
+      <h1 className="mb-8 text-2xl font-bold">Shopping Bag ({items.length})</h1>
 
-      {cartItems.length === 0 ? (
-        /* EMPTY STATE */
+      {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
             <ShoppingBag size={32} />
@@ -94,17 +37,15 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        /* CART CONTENT Grid: Left (Items) - Right (Summary) */
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
           
-          {/* LEFT: ITEMS LIST */}
+          {/* ITEMS LIST */}
           <div className="flex-1 space-y-4">
-            {cartItems.map((item) => (
+            {items.map((item) => (
               <div
                 key={item.id}
                 className="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md"
               >
-                {/* Image */}
                 <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                   <img
                     src={item.image}
@@ -113,7 +54,6 @@ export default function CartPage() {
                   />
                 </div>
 
-                {/* Details */}
                 <div className="flex flex-1 flex-col justify-between">
                   <div className="flex justify-between gap-2">
                     <div>
@@ -122,7 +62,6 @@ export default function CartPage() {
                       </h3>
                       <p className="text-xs text-gray-500">{item.category}</p>
                     </div>
-                    {/* Delete Button (Desktop) */}
                     <button
                       onClick={() => removeItem(item.id)}
                       className="text-gray-400 hover:text-red-500"
@@ -132,10 +71,10 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex items-end justify-between">
-                    {/* Quantity Controls */}
+                    {/* QUANTITY CONTROLS */}
                     <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50">
                       <button
-                        onClick={() => decrementQty(item.id)}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-l-lg"
                       >
                         <Minus size={14} />
@@ -144,14 +83,14 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => incrementQty(item.id)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-r-lg"
                       >
                         <Plus size={14} />
                       </button>
                     </div>
 
-                    {/* Price */}
+                    {/* PRICE */}
                     <div className="text-right">
                        <p className="text-sm font-bold text-gray-900">
                          {formatPrice(item.weight * item.quantity)}
@@ -168,14 +107,14 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* RIGHT: ORDER SUMMARY */}
+          {/* ORDER SUMMARY */}
           <div className="h-fit w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:w-96 lg:sticky lg:top-4">
             <h2 className="mb-6 text-lg font-bold text-gray-900">Order Summary</h2>
 
             <div className="space-y-3 border-b border-gray-100 pb-4 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatPrice(subtotal())}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>

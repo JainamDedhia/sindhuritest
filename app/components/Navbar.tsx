@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings } from "lucide-react";
+import { useCartStore } from "@/app/store/cartStore";
+import { useWishlistStore } from "@/app/store/wishlistStore";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -12,7 +14,16 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const pathname = usePathname();
 
-  // Helper to highlight active link
+  // 🔥 FIX: Prevent hydration mismatch by only showing counts after mount
+  const [mounted, setMounted] = useState(false);
+  
+  const cartCount = useCartStore((state) => state.totalItems());
+  const wishlistCount = useWishlistStore((state) => state.totalItems());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isActive = (path: string) => 
     pathname === path ? "text-[var(--color-gold-primary)]" : "text-gray-900";
 
@@ -26,18 +37,16 @@ export default function Navbar() {
       
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         
-        {/* ==================== MOBILE LAYOUT (Visible < md) ==================== */}
+        {/* MOBILE LAYOUT */}
         <div className="flex w-full items-center justify-between md:hidden relative">
           
-          {/* 1. HAMBURGER MENU (Left) */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-2 -ml-2 text-gray-700 transition-colors hover:text-black"
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} className="cursor-pointer" />}
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* 2. LOGO (Centered Absolutely) */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
               <img 
@@ -50,7 +59,6 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* 3. PROFILE / AUTH (Right) */}
           {session ? (
             <div className="relative">
               <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="p-1">
@@ -59,19 +67,14 @@ export default function Navbar() {
                     src={session.user.image} 
                     alt="Profile" 
                     className="h-8 w-8 rounded-full object-cover border border-gray-200"
-                    onError={(e) => {
-                      // Fallback if image fails to load
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
                   />
-                ) : null}
-                <div className={`${session.user?.image ? 'hidden' : ''} h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200`}>
-                  <User size={18} className="text-gray-600" />
-                </div>
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                    <User size={18} className="text-gray-600" />
+                  </div>
+                )}
               </button>
 
-              {/* Mobile Profile Dropdown */}
               {showProfileMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
@@ -108,10 +111,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* ==================== DESKTOP LAYOUT (Visible >= md) ==================== */}
+        {/* DESKTOP LAYOUT */}
         <div className="hidden w-full items-center justify-between md:flex">
           
-          {/* LEFT: Logo */}
           <Link href="/" className="flex items-center">
             <img 
               src="/assets/Sinduri_Logo.PNG" 
@@ -122,7 +124,6 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* CENTER: Navigation Links */}
           <div className="flex gap-8 text-sm font-medium uppercase tracking-wide">
             <Link href="/products" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/products")}`}>
               Products
@@ -135,10 +136,27 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* RIGHT: Icons & Auth */}
           <div className="flex items-center gap-6">
+            {/* CART WITH COUNT BADGE */}
             <Link href="/cart" className="relative group hover:text-[var(--color-gold-primary)] transition">
               <ShoppingBag size={20} />
+              {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
+              {mounted && cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* WISHLIST WITH COUNT BADGE */}
+            <Link href="/wishlist" className="relative group hover:text-[var(--color-gold-primary)] transition">
+              <Heart size={20} />
+              {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
+              {mounted && wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
             
             {session ? (
@@ -152,19 +170,15 @@ export default function Navbar() {
                       src={session.user.image} 
                       alt="Profile" 
                       className="h-6 w-6 rounded-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
                     />
-                  ) : null}
-                  <div className={`${session.user?.image ? 'hidden' : ''} h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center`}>
-                    <User size={14} />
-                  </div>
+                  ) : (
+                    <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User size={14} />
+                    </div>
+                  )}
                   <span>{session.user?.name?.split(" ")[0] || "Account"}</span>
                 </button>
 
-                {/* Desktop Profile Dropdown */}
                 {showProfileMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
@@ -206,7 +220,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ==================== MOBILE MENU DROPDOWN ==================== */}
+      {/* MOBILE MENU DROPDOWN */}
       <div 
         className={`
           absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl md:hidden
@@ -216,7 +230,6 @@ export default function Navbar() {
       >
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
-          {/* Search Bar */}
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input 
@@ -236,18 +249,34 @@ export default function Navbar() {
           
           <Link 
             href="/wishlist" 
-            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <Heart size={18} /> My Wishlist
+            <span className="flex items-center gap-3">
+              <Heart size={18} /> My Wishlist
+            </span>
+            {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
+            {mounted && wishlistCount > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {wishlistCount}
+              </span>
+            )}
           </Link>
 
           <Link 
             href="/cart" 
-            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <ShoppingBag size={18} /> My Cart
+            <span className="flex items-center gap-3">
+              <ShoppingBag size={18} /> My Cart
+            </span>
+            {/* 🔥 ONLY RENDER BADGE AFTER HYDRATION */}
+            {mounted && cartCount > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {session && (
