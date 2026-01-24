@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, ShoppingBag, MessageCircle, Check } from "lucide-react";
+import { Heart, ShoppingBag, MessageCircle, Check, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useUIStore } from "@/app/store/uiStore";
+import { useState } from "react";
 
 interface ProductProps {
   id: number | string;
@@ -18,6 +19,8 @@ interface ProductProps {
 
 export default function ProductCard({ product }: { product: ProductProps }) {
   const ADMIN_PHONE_NUMBER = "917021419016";
+  
+  const [isAdding, setIsAdding] = useState(false);
 
   // Zustand stores
   const addToCart = useCartStore((state) => state.addItem);
@@ -28,20 +31,43 @@ export default function ProductCard({ product }: { product: ProductProps }) {
   
   const showToast = useUIStore((state) => state.showToast);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    addToCart({
-      id: product.id,
-      title: product.title,
-      category: product.category,
-      description: product.description,
-      weight: parseFloat(product.weight),
-      image: product.image,
-    });
+    // ✅ CHECK STOCK BEFORE ADDING
+    if (!product.inStock) {
+      showToast("This item is currently sold out", "error");
+      return;
+    }
 
-    showToast(`${product.title} added to cart!`, "success");
+    setIsAdding(true);
+
+    try {
+      await addToCart({
+        id: product.id,
+        title: product.title,
+        category: product.category,
+        description: product.description,
+        weight: parseFloat(product.weight),
+        image: product.image,
+        inStock: product.inStock,
+      });
+
+      showToast(`${product.title} added to cart!`, "success");
+      
+    } catch (error: any) {
+      // Error handling with specific messages
+      if (error.message.includes("sold out")) {
+        showToast("This item is currently sold out", "error");
+      } else if (error.message.includes("Unauthorized")) {
+        showToast("Please sign in to add items to cart", "info");
+      } else {
+        showToast(error.message || "Failed to add to cart", "error");
+      }
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -99,6 +125,7 @@ Weight: ${product.weight}g
             "
           />
 
+          {/* Wishlist Button */}
           <button
             onClick={handleToggleWishlist}
             className={`
@@ -116,9 +143,15 @@ Weight: ${product.weight}g
             <Heart size={16} className={isWishlisted ? "fill-current" : ""} />
           </button>
 
-          {product.inStock && (
-            <div className="absolute top-3 left-3 rounded bg-black/80 px-2 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur-md">
+          {/* Stock Badge */}
+          {product.inStock ? (
+            <div className="absolute top-3 left-3 rounded bg-green-600/90 px-2 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur-md">
               IN STOCK
+            </div>
+          ) : (
+            <div className="absolute top-3 left-3 rounded bg-red-600/90 px-2 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur-md flex items-center gap-1">
+              <AlertCircle size={10} />
+              SOLD OUT
             </div>
           )}
         </div>
@@ -141,26 +174,36 @@ Weight: ${product.weight}g
           <div className="mt-4 flex gap-3">
             <button
               onClick={handleAddToCart}
+              disabled={!product.inStock || isAdding}
               className={`
                 flex flex-1 items-center justify-center gap-2
                 rounded-lg border h-9
                 text-[12px] font-semibold 
                 transition-all duration-200
                 active:scale-95
+                disabled:opacity-50 disabled:cursor-not-allowed
                 ${
-                  isInCart
+                  !product.inStock
+                    ? "border-gray-200 bg-gray-50 text-gray-400"
+                    : isInCart
                     ? "border-green-600 bg-green-50 text-green-700 hover:bg-green-100"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-900 hover:text-gray-900"
                 }
               `}
             >
-              {isInCart ? (
+              {isAdding ? (
+                <>
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700" />
+                  Adding...
+                </>
+              ) : isInCart ? (
                 <>
                   <Check size={14} /> Added
                 </>
               ) : (
                 <>
-                  <ShoppingBag size={14} /> Add
+                  <ShoppingBag size={14} /> 
+                  {product.inStock ? "Add" : "Sold Out"}
                 </>
               )}
             </button>
