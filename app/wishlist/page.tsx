@@ -46,27 +46,7 @@ export default function WishlistPage() {
         <h1 className="text-2xl font-bold">My Wishlist ({items.length})</h1>
         
         <div className="flex items-center gap-3">
-          {/* Sync Status Indicator */}
-          {session?.user && (
-            <div className="flex items-center gap-2 text-xs">
-              {isRefreshing || isLoading ? (
-                <span className="flex items-center gap-1 text-blue-600">
-                  <RefreshCw size={12} className="animate-spin" />
-                  Syncing...
-                </span>
-              ) : isSynced ? (
-                <span className="flex items-center gap-1 text-green-600">
-                  <span className="h-2 w-2 rounded-full bg-green-600"></span>
-                  Synced
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-gray-400">
-                  <span className="h-2 w-2 rounded-full bg-gray-400"></span>
-                  Local
-                </span>
-              )}
-            </div>
-          )}
+
 
           {/* Manual Refresh Button */}
           {session?.user && (
