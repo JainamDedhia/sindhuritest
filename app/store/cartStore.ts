@@ -18,6 +18,7 @@ interface CartStore {
   isLoading: boolean;
   error: string | null;
   isSynced: boolean;
+  lastSyncTime: number;
   
   // Actions
   addItem: (item: Omit<CartItem, "quantity">) => Promise<void>;
@@ -28,8 +29,9 @@ interface CartStore {
   // Sync
   syncWithBackend: () => Promise<void>;
   loadFromBackend: () => Promise<void>;
+  forceRefresh: () => Promise<void>;
   
-  // 🔥 NEW: Handle logout
+  // Logout
   handleLogout: () => void;
   
   // Computed
@@ -49,32 +51,19 @@ export const useCartStore = create<CartStore>()(
       isLoading: false,
       error: null,
       isSynced: false,
+      lastSyncTime: 0,
 
-      // ============= ADD ITEM =============
+      // ============= ADD ITEM (FIXED) =============
       addItem: async (item) => {
+        const productId = String(item.id);
         set({ isLoading: true, error: null });
         
         try {
-          // Add to local state immediately (optimistic update)
-          const existingItem = get().items.find((i) => i.id === item.id);
-          
-          if (existingItem) {
-            set((state) => ({
-              items: state.items.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-              ),
-            }));
-          } else {
-            set((state) => ({
-              items: [...state.items, { ...item, quantity: 1 }],
-            }));
-          }
-
-          // Sync with backend
+          // Call backend FIRST to ensure product is available
           const res = await fetch("/api/cart", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId: item.id })
+            body: JSON.stringify({ productId })
           });
 
           if (!res.ok) {
@@ -82,114 +71,124 @@ export const useCartStore = create<CartStore>()(
             throw new Error(data.error || "Failed to add item");
           }
 
+          // Get fresh cart state from backend
           const { items } = await res.json();
-          set({ items, isSynced: true });
+          
+          set({ 
+            items, 
+            isSynced: true,
+            lastSyncTime: Date.now()
+          });
+          
+          window.dispatchEvent(new Event("cart-updated"));
           
         } catch (error: any) {
-          // Revert optimistic update on error
-          await get().loadFromBackend();
           set({ error: error.message });
           throw error;
         } finally {
           set({ isLoading: false });
         }
-        
-        window.dispatchEvent(new Event("cart-updated"));
       },
 
-      // ============= REMOVE ITEM =============
+      // ============= REMOVE ITEM (FIXED) =============
       removeItem: async (id) => {
+        const productId = String(id);
         set({ isLoading: true, error: null });
         
         try {
-          // Optimistic update
-          const previousItems = get().items;
-          set((state) => ({
-            items: state.items.filter((item) => item.id !== id),
-          }));
-
-          // Sync with backend
-          const res = await fetch(`/api/cart/${id}`, {
+          const res = await fetch(`/api/cart/${productId}`, {
             method: "DELETE"
           });
 
           if (!res.ok) {
-            // Revert on error
-            set({ items: previousItems });
-            throw new Error("Failed to remove item");
+            const errorData = await res.json();
+            throw new Error(errorData.error || "Failed to remove item");
           }
 
           const { items } = await res.json();
-          set({ items, isSynced: true });
+          
+          set({ 
+            items, 
+            isSynced: true,
+            lastSyncTime: Date.now()
+          });
+          
+          window.dispatchEvent(new Event("cart-updated"));
           
         } catch (error: any) {
+          console.error("Remove item error:", error);
           set({ error: error.message });
+          // Force refresh to get correct state
+          await get().forceRefresh();
           throw error;
         } finally {
           set({ isLoading: false });
         }
-        
-        window.dispatchEvent(new Event("cart-updated"));
       },
 
-      // ============= UPDATE QUANTITY =============
+      // ============= UPDATE QUANTITY (FIXED) =============
       updateQuantity: async (id, quantity) => {
         if (quantity < 1) {
           return get().removeItem(id);
         }
         
+        const productId = String(id);
         set({ isLoading: true, error: null });
         
         try {
-          // Optimistic update
-          const previousItems = get().items;
-          set((state) => ({
-            items: state.items.map((item) =>
-              item.id === id ? { ...item, quantity } : item
-            ),
-          }));
-
-          // Sync with backend
-          const res = await fetch(`/api/cart/${id}`, {
+          const res = await fetch(`/api/cart/${productId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quantity })
           });
 
           if (!res.ok) {
-            // Revert on error
-            set({ items: previousItems });
-            throw new Error("Failed to update quantity");
+            const errorData = await res.json();
+            throw new Error(errorData.error || "Failed to update quantity");
           }
 
           const { items } = await res.json();
-          set({ items, isSynced: true });
+          
+          set({ 
+            items, 
+            isSynced: true,
+            lastSyncTime: Date.now()
+          });
+          
+          window.dispatchEvent(new Event("cart-updated"));
           
         } catch (error: any) {
+          console.error("Update quantity error:", error);
           set({ error: error.message });
+          // Force refresh to get correct state
+          await get().forceRefresh();
           throw error;
         } finally {
           set({ isLoading: false });
         }
-        
-        window.dispatchEvent(new Event("cart-updated"));
       },
 
       // ============= CLEAR CART =============
       clearCart: () => {
-        set({ items: [], isSynced: false });
+        set({ items: [], isSynced: false, lastSyncTime: 0 });
         window.dispatchEvent(new Event("cart-updated"));
       },
 
-      // ============= SYNC WITH BACKEND =============
+      // ============= SYNC WITH BACKEND (IMPROVED) =============
       syncWithBackend: async () => {
         set({ isLoading: true, error: null });
         
         try {
           const localItems = get().items.map(item => ({
-            id: item.id,
+            id: String(item.id),
             quantity: item.quantity
           }));
+
+          // Only sync if we have local items
+          if (localItems.length === 0) {
+            await get().loadFromBackend();
+            return;
+          }
 
           const res = await fetch("/api/cart", {
             method: "POST",
@@ -205,24 +204,34 @@ export const useCartStore = create<CartStore>()(
           }
 
           const { items } = await res.json();
-          set({ items, isSynced: true });
+          
+          set({ 
+            items, 
+            isSynced: true,
+            lastSyncTime: Date.now()
+          });
+          
+          window.dispatchEvent(new Event("cart-updated"));
           
         } catch (error: any) {
+          console.error("Sync error:", error);
           set({ error: error.message });
         } finally {
           set({ isLoading: false });
         }
       },
 
-      // ============= LOAD FROM BACKEND =============
+      // ============= LOAD FROM BACKEND (IMPROVED) =============
       loadFromBackend: async () => {
         set({ isLoading: true, error: null });
         
         try {
-          const res = await fetch("/api/cart");
+          const res = await fetch("/api/cart", {
+            cache: 'no-store' // Prevent caching
+          });
           
           if (res.status === 401) {
-            // User not logged in, use local storage
+            // User not logged in
             set({ isSynced: false, isLoading: false });
             return;
           }
@@ -232,23 +241,38 @@ export const useCartStore = create<CartStore>()(
           }
 
           const items = await res.json();
-          set({ items, isSynced: true });
+          
+          set({ 
+            items, 
+            isSynced: true,
+            lastSyncTime: Date.now()
+          });
+          
+          window.dispatchEvent(new Event("cart-updated"));
           
         } catch (error: any) {
+          console.error("Load cart error:", error);
           set({ error: error.message });
         } finally {
           set({ isLoading: false });
         }
       },
 
-      // 🔥 ============= HANDLE LOGOUT =============
+      // ============= FORCE REFRESH (NEW) =============
+      forceRefresh: async () => {
+        console.log("🔄 Force refreshing cart...");
+        await get().loadFromBackend();
+      },
+
+      // ============= HANDLE LOGOUT =============
       handleLogout: () => {
         console.log("🧹 Clearing cart on logout");
         set({ 
           items: [], 
           isSynced: false,
           isLoading: false,
-          error: null
+          error: null,
+          lastSyncTime: 0
         });
         window.dispatchEvent(new Event("cart-updated"));
       },
@@ -266,7 +290,7 @@ export const useCartStore = create<CartStore>()(
       },
 
       isInCart: (id) => {
-        return get().items.some((item) => item.id === id);
+        return get().items.some((item) => String(item.id) === String(id));
       },
 
       // ============= INTERNAL =============
@@ -276,6 +300,13 @@ export const useCartStore = create<CartStore>()(
     {
       name: "cart-storage",
       storage: createJSONStorage(() => localStorage),
+      // Merge strategy to prevent state conflicts
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        isLoading: false,
+        error: null,
+      }),
     }
   )
 );

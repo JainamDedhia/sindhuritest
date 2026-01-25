@@ -9,22 +9,30 @@ export async function getUserCart(userId: string) {
       product: {
         include: {
           category: true,
-          images: { orderBy: { position: 'asc' }, take: 1 }
+          images: { 
+            orderBy: { position: 'asc' }, 
+            take: 1 
+          }
         }
       }
+    },
+    orderBy: {
+      createdAt: 'desc'
     }
   });
 
-  return items.map(item => ({
-    id: item.product.id,
-    title: item.product.name,
-    category: item.product.category?.name || "Jewellery",
-    description: item.product.description || "",
-    weight: parseFloat(item.product.weight.toString()),
-    image: item.product.images[0]?.imageUrl || "",
-    quantity: item.quantity,
-    inStock: !item.product.isSoldOut
-  }));
+  return items
+    .filter(item => item.product) // Filter out items with deleted products
+    .map(item => ({
+      id: item.product.id,
+      title: item.product.name,
+      category: item.product.category?.name || "Jewellery",
+      description: item.product.description || "",
+      weight: parseFloat(item.product.weight.toString()),
+      image: item.product.images[0]?.imageUrl || "",
+      quantity: item.quantity,
+      inStock: !item.product.isSoldOut
+    }));
 }
 
 // ============= ADD TO CART =============
@@ -42,29 +50,27 @@ export async function addToCart(userId: string, productId: string) {
     throw new Error("Product is sold out");
   }
 
-  // Check if item already in cart
-  const existing = await prisma.cartItem.findUnique({
+  // Use upsert to handle duplicate key errors gracefully
+  const cartItem = await prisma.cartItem.upsert({
     where: {
-      userId_productId: { userId, productId }
-    }
-  });
-
-  if (existing) {
-    // Increment quantity
-    return await prisma.cartItem.update({
-      where: { id: existing.id },
-      data: { quantity: existing.quantity + 1 }
-    });
-  }
-
-  // Add new item
-  return await prisma.cartItem.create({
-    data: {
+      userId_productId: { 
+        userId, 
+        productId 
+      }
+    },
+    update: {
+      quantity: {
+        increment: 1
+      }
+    },
+    create: {
       userId,
       productId,
       quantity: 1
     }
   });
+
+  return cartItem;
 }
 
 // ============= UPDATE QUANTITY =============
@@ -77,21 +83,38 @@ export async function updateCartQuantity(
     return await removeFromCart(userId, productId);
   }
 
-  return await prisma.cartItem.update({
-    where: {
-      userId_productId: { userId, productId }
-    },
-    data: { quantity }
-  });
+  try {
+    return await prisma.cartItem.update({
+      where: {
+        userId_productId: { userId, productId }
+      },
+      data: { quantity }
+    });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      // Record not found - throw specific error
+      throw new Error("Cart item not found");
+    }
+    throw error;
+  }
 }
 
 // ============= REMOVE FROM CART =============
 export async function removeFromCart(userId: string, productId: string) {
-  return await prisma.cartItem.delete({
-    where: {
-      userId_productId: { userId, productId }
+  try {
+    return await prisma.cartItem.delete({
+      where: {
+        userId_productId: { userId, productId }
+      }
+    });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      // Record not found - this is OK
+      console.log(`Cart item ${productId} already removed for user ${userId}`);
+      return null;
     }
-  });
+    throw error;
+  }
 }
 
 // ============= CLEAR CART =============
@@ -101,28 +124,79 @@ export async function clearCart(userId: string) {
   });
 }
 
-// ============= SYNC LOCAL TO DB =============
+// ============= SYNC LOCAL TO DB (IMPROVED) =============
 export async function syncLocalCartToDb(
   userId: string, 
   localItems: Array<{ id: string; quantity: number }>
 ) {
-  // Clear existing cart
-  await clearCart(userId);
+  console.log(`🔄 Starting sync for user ${userId} with ${localItems.length} items`);
 
-  // Add all items from local storage
-  for (const item of localItems) {
-    try {
-      await prisma.cartItem.create({
-        data: {
+  // Use transaction for atomic operation
+  await prisma.$transaction(async (tx) => {
+    // 1. Get current cart items from DB
+    const existingItems = await tx.cartItem.findMany({
+      where: { userId },
+      select: { productId: true }
+    });
+
+    const existingProductIds = new Set(existingItems.map(item => item.productId));
+    const localProductIds = new Set(localItems.map(item => item.id));
+
+    // 2. Remove items that are in DB but not in local
+    const toRemove = Array.from(existingProductIds).filter(id => !localProductIds.has(id));
+    
+    if (toRemove.length > 0) {
+      await tx.cartItem.deleteMany({
+        where: {
           userId,
-          productId: item.id,
-          quantity: item.quantity
+          productId: { in: toRemove }
         }
       });
-    } catch (err) {
-      console.error(`Failed to sync item ${item.id}:`, err);
+      console.log(`🗑️ Removed ${toRemove.length} items from DB`);
     }
-  }
 
+    // 3. Upsert local items to DB
+    for (const item of localItems) {
+      try {
+        // Verify product exists and is available
+        const product = await tx.product.findUnique({
+          where: { id: item.id }
+        });
+
+        if (!product) {
+          console.warn(`⚠️ Product ${item.id} not found, skipping`);
+          continue;
+        }
+
+        if (product.isSoldOut) {
+          console.warn(`⚠️ Product ${item.id} is sold out, skipping`);
+          continue;
+        }
+
+        await tx.cartItem.upsert({
+          where: {
+            userId_productId: {
+              userId,
+              productId: item.id
+            }
+          },
+          update: {
+            quantity: item.quantity
+          },
+          create: {
+            userId,
+            productId: item.id,
+            quantity: item.quantity
+          }
+        });
+      } catch (err) {
+        console.error(`Failed to sync item ${item.id}:`, err);
+      }
+    }
+  });
+
+  console.log(`✅ Sync complete for user ${userId}`);
+
+  // Return fresh cart state
   return await getUserCart(userId);
 }

@@ -149,15 +149,16 @@ export default function AdminProductListPage() {
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 border-b border-gray-100 text-gray-500">
-            <tr>
-              <th className="px-6 py-4 font-medium">Product</th>
-              <th className="px-6 py-4 font-medium">SKU</th>
-              <th className="px-6 py-4 font-medium text-center">Featured</th> {/* NEW COLUMN */}
-              <th className="px-6 py-4 font-medium">Weight</th>
-              <th className="px-6 py-4 font-medium">Status</th>
-              <th className="px-6 py-4 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
+  <tr>
+    <th className="px-6 py-4 font-medium">Product</th>
+    <th className="px-6 py-4 font-medium">SKU</th>
+    <th className="px-6 py-4 font-medium text-center">Featured</th>
+    <th className="px-6 py-4 font-medium">Weight</th>
+    <th className="px-6 py-4 font-medium">Status</th>
+    <th className="px-6 py-4 text-right font-medium">Actions</th>
+  </tr>
+</thead>
+
           
           <tbody className="divide-y divide-gray-100">
             {filteredProducts.length === 0 ? (

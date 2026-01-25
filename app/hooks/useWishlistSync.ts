@@ -1,14 +1,14 @@
-// app/hooks/useCartSync.ts
+// app/hooks/useWishlistSync.ts
 "use client";
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { useCartStore } from "@/app/store/cartStore";
+import { useWishlistStore } from "@/app/store/wishlistStore";
 
 /**
- * Enhanced cart sync with proper multi-device handling
+ * Enhanced wishlist sync with proper multi-device handling
  */
-export function useCartSync() {
+export function useWishlistSync() {
   const { data: session, status } = useSession();
   const { 
     loadFromBackend, 
@@ -16,31 +16,27 @@ export function useCartSync() {
     isSynced, 
     items,
     lastSyncTime 
-  } = useCartStore();
+  } = useWishlistStore();
   
   const hasInitialized = useRef(false);
   const syncInterval = useRef<NodeJS.Timeout | null>(null);
 
   // ============= INITIAL SYNC ON LOGIN =============
   useEffect(() => {
-    // Wait for auth to resolve
     if (status === "loading") return;
 
-    // User logged in
     if (session?.user && !hasInitialized.current) {
       hasInitialized.current = true;
       
       const performInitialSync = async () => {
-        console.log("🔄 Performing initial cart sync...");
+        console.log("🔄 Performing initial wishlist sync...");
         const hasLocalItems = items.length > 0;
 
         if (hasLocalItems && !isSynced) {
-          // Has local items that haven't been synced
-          console.log("📤 Syncing local cart to backend...");
+          console.log("📤 Syncing local wishlist to backend...");
           await syncWithBackend();
         } else {
-          // Load from backend (this will overwrite local)
-          console.log("📥 Loading cart from backend...");
+          console.log("📥 Loading wishlist from backend...");
           await loadFromBackend();
         }
       };
@@ -48,7 +44,6 @@ export function useCartSync() {
       performInitialSync();
     }
 
-    // User logged out
     if (status === "unauthenticated") {
       hasInitialized.current = false;
     }
@@ -57,7 +52,6 @@ export function useCartSync() {
   // ============= PERIODIC SYNC (EVERY 30 SECONDS) =============
   useEffect(() => {
     if (!session?.user) {
-      // Clear interval if user logs out
       if (syncInterval.current) {
         clearInterval(syncInterval.current);
         syncInterval.current = null;
@@ -65,16 +59,14 @@ export function useCartSync() {
       return;
     }
 
-    // Set up periodic sync
     syncInterval.current = setInterval(async () => {
       const timeSinceLastSync = Date.now() - lastSyncTime;
       
-      // Only sync if it's been more than 25 seconds
       if (timeSinceLastSync > 25000) {
-        console.log("⏰ Periodic cart refresh...");
+        console.log("⏰ Periodic wishlist refresh...");
         await loadFromBackend();
       }
-    }, 30000); // Every 30 seconds
+    }, 30000);
 
     return () => {
       if (syncInterval.current) {
@@ -91,9 +83,8 @@ export function useCartSync() {
       if (document.visibilityState === 'visible') {
         const timeSinceLastSync = Date.now() - lastSyncTime;
         
-        // Refresh if it's been more than 10 seconds
         if (timeSinceLastSync > 10000) {
-          console.log("👁️ Tab became visible, refreshing cart...");
+          console.log("👁️ Tab became visible, refreshing wishlist...");
           await loadFromBackend();
         }
       }

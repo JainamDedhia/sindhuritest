@@ -1,3 +1,4 @@
+// app/layout.tsx
 "use client";
 
 import "./globals.css";
@@ -6,8 +7,9 @@ import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import AuthSessionProvider from "./components/SessionProvider";
 import { usePathname } from "next/navigation";
-import { useCartSync} from "./hooks/useCartSync";
-import {ErrorBoundary} from "./components/ErrorBoundary";
+import { useCartSync } from "./hooks/useCartSync";
+import { useWishlistSync } from "./hooks/useWishlistSync";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 /**
  * ROOT LAYOUT
@@ -15,8 +17,9 @@ import {ErrorBoundary} from "./components/ErrorBoundary";
  * Hides them for admin routes (admin has its own layout)
  */
 
-function CartSyncProvider({ children }: { children: React.ReactNode }) {
+function CartAndWishlistSyncProvider({ children }: { children: React.ReactNode }) {
   useCartSync();
+  useWishlistSync(); // 🔥 NEW: Wishlist sync
   return <>{children}</>;
 }
 
@@ -33,24 +36,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-white text-black">
-      <ErrorBoundary>
-        <AuthSessionProvider>
-            <CartSyncProvider>
-          {/* Only show Navbar + Footer for NON-admin routes */}
-          {!isAdminRoute && <Navbar />}
+        <ErrorBoundary>
+          <AuthSessionProvider>
+            <CartAndWishlistSyncProvider>
+              {/* Only show Navbar + Footer for NON-admin routes */}
+              {!isAdminRoute && <Navbar />}
 
-          <main className={!isAdminRoute ? "min-h-screen" : ""}>
-            {children}
-          </main>
+              <main className={!isAdminRoute ? "min-h-screen" : ""}>
+                {children}
+              </main>
 
-          {!isAdminRoute && <Footer />}
+              {!isAdminRoute && <Footer />}
 
-          {/* Global Toast Notification */}
-          <Toast />
-          </CartSyncProvider>
-        </AuthSessionProvider>
+              {/* Global Toast Notification */}
+              <Toast />
+            </CartAndWishlistSyncProvider>
+          </AuthSessionProvider>
         </ErrorBoundary>
-        
       </body>
     </html>
   );

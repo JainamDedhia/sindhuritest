@@ -1,16 +1,82 @@
+// app/cart/page.tsx
 "use client";
 
 import Link from "next/link";
-import { Trash2, Minus, Plus, ArrowRight, ShoppingBag } from "lucide-react";
+import { Trash2, Minus, Plus, ArrowRight, ShoppingBag, RefreshCw, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function CartPage() {
-  // 🔥 USE ZUSTAND STORE
-  const { items, updateQuantity, removeItem } = useCartStore();
+  const { data: session } = useSession();
+  const { 
+    items, 
+    updateQuantity, 
+    removeItem, 
+    isLoading,
+    error,
+    forceRefresh,
+    isSynced
+  } = useCartStore();
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Auto-refresh when page loads (if logged in)
+  useEffect(() => {
+    if (session?.user) {
+      const refreshCart = async () => {
+        setIsRefreshing(true);
+        await forceRefresh();
+        setIsRefreshing(false);
+      };
+      refreshCart();
+    }
+  }, [session]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await forceRefresh();
+    setIsRefreshing(false);
+  };
 
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
-      <h1 className="mb-8 text-2xl font-bold">Shopping Bag ({items.length})</h1>
+      
+      {/* HEADER WITH SYNC STATUS */}
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Shopping Bag ({items.length})</h1>
+        
+        <div className="flex items-center gap-3">
+          {/* Manual Refresh Button */}
+          {session?.user && (
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              Refresh
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ERROR DISPLAY */}
+      {error && (
+        <div className="mb-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+          <AlertCircle size={20} className="text-red-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">Error syncing cart</p>
+            <p className="text-xs text-red-700">{error}</p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="text-sm font-medium text-red-600 hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-16 text-center">
@@ -33,7 +99,9 @@ export default function CartPage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md"
+                className={`flex gap-4 rounded-xl border bg-white p-4 shadow-sm transition-all ${
+                  isLoading ? 'opacity-50' : 'hover:shadow-md'
+                }`}
               >
                 <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                   <img
@@ -53,7 +121,8 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="text-gray-400 hover:text-red-500"
+                      disabled={isLoading}
+                      className="text-gray-400 hover:text-red-500 disabled:opacity-50"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -64,7 +133,8 @@ export default function CartPage() {
                     <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-l-lg"
+                        disabled={isLoading}
+                        className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-l-lg disabled:opacity-50"
                       >
                         <Minus size={14} />
                       </button>
@@ -73,22 +143,23 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-r-lg"
+                        disabled={isLoading}
+                        className="p-1.5 text-gray-600 hover:bg-white hover:text-black rounded-r-lg disabled:opacity-50"
                       >
                         <Plus size={14} />
                       </button>
                     </div>
 
-                    {/* 🔥 SHOW WEIGHT ONLY, NO PRICE */}
+                    {/* WEIGHT */}
                     <div className="text-right">
-                       <p className="text-sm font-bold text-gray-900">
-                         {item.weight * item.quantity}g
-                       </p>
-                       {item.quantity > 1 && (
-                         <p className="text-[10px] text-gray-500">
-                           {item.weight}g each
-                         </p>
-                       )}
+                      <p className="text-sm font-bold text-gray-900">
+                        {item.weight * item.quantity}g
+                      </p>
+                      {item.quantity > 1 && (
+                        <p className="text-[10px] text-gray-500">
+                          {item.weight}g each
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -96,7 +167,7 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* ORDER SUMMARY - NO PRICES */}
+          {/* ORDER SUMMARY */}
           <div className="h-fit w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:w-96 lg:sticky lg:top-4">
             <h2 className="mb-6 text-lg font-bold text-gray-900">Cart Summary</h2>
 
@@ -113,7 +184,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-gold-primary)] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-gold-accent)] active:scale-95">
+            <button 
+              disabled={isLoading}
+              className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-gold-primary)] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-gold-accent)] active:scale-95 disabled:opacity-50"
+            >
               Enquire about this Order
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </button>

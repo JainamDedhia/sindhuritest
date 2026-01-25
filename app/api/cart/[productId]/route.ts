@@ -1,6 +1,6 @@
 // app/api/cart/[productId]/route.ts
 import { NextResponse } from "next/server";
-import { auth } from "@/app/api/auth/[...nextauth]/route"; // ✅ Import from YOUR route
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 import { updateCartQuantity, removeFromCart, getUserCart } from "@/app/lib/dal/cart";
 
 // PATCH - Update quantity
@@ -28,6 +28,8 @@ export async function PATCH(
       );
     }
 
+    console.log(`🔄 Updating quantity for product ${productId} to ${quantity}`);
+
     await updateCartQuantity(session.user.id, productId, quantity);
     const items = await getUserCart(session.user.id);
     
@@ -39,6 +41,16 @@ export async function PATCH(
     
   } catch (error: any) {
     console.error("Cart PATCH Error:", error);
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2025') {
+      // Record not found
+      return NextResponse.json(
+        { error: "Cart item not found" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
       { error: error.message || "Failed to update cart" },
       { status: 500 }
@@ -62,6 +74,9 @@ export async function DELETE(
     }
 
     const { productId } = await params;
+    
+    console.log(`🗑️ Removing product ${productId} from cart`);
+
     await removeFromCart(session.user.id, productId);
     const items = await getUserCart(session.user.id);
     
@@ -73,6 +88,18 @@ export async function DELETE(
     
   } catch (error: any) {
     console.error("Cart DELETE Error:", error);
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2025') {
+      // Record not found - this is OK, item already gone
+      const items = await getUserCart(session.user.id);
+      return NextResponse.json({ 
+        success: true, 
+        items,
+        message: "Item already removed" 
+      });
+    }
+    
     return NextResponse.json(
       { error: error.message || "Failed to remove item" },
       { status: 500 }

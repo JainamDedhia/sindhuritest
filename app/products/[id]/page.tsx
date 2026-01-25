@@ -1,7 +1,9 @@
+// app/products/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Heart,
   ShoppingBag,
@@ -12,19 +14,32 @@ import {
   Shield,
   Truck,
   Check,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-
+import { useCartStore } from "@/app/store/cartStore";
+import { useWishlistStore } from "@/app/store/wishlistStore";
+import { useUIStore } from "@/app/store/uiStore";
 
 export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
+  
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const ADMIN_PHONE = "917021419016";
-  const GOLD_RATE = 7000;
+
+  // Zustand stores
+  const addToCart = useCartStore((state) => state.addItem);
+  const isInCart = useCartStore((state) => state.isInCart(product?.id || ""));
+  
+  const toggleWishlist = useWishlistStore((state) => state.toggleItem);
+  const isWishlisted = useWishlistStore((state) => state.isWishlisted(product?.id || ""));
+  
+  const showToast = useUIStore((state) => state.showToast);
 
   useEffect(() => {
     if (!params.id) return;
@@ -40,20 +55,6 @@ export default function ProductDetailsPage() {
         console.log("✅ Product data received:", data);
         setProduct(data);
         setLoading(false);
-
-        // Check wishlist
-        const wishlist = localStorage.getItem("wishlist");
-        if (wishlist) {
-          const items = JSON.parse(wishlist);
-          setIsWishlisted(items.some((i: any) => i.id === data.id));
-        }
-
-        // Check cart
-        const cart = localStorage.getItem("cart");
-        if (cart) {
-          const items = JSON.parse(cart);
-          setIsInCart(items.some((i: any) => i.id === data.id));
-        }
       })
       .catch((error) => {
         console.error("❌ Failed to fetch product:", error);
@@ -61,65 +62,85 @@ export default function ProductDetailsPage() {
       });
   }, [params.id]);
 
-  const toggleWishlist = () => {
-    const wishlist = localStorage.getItem("wishlist");
-    let items = wishlist ? JSON.parse(wishlist) : [];
+  // ============= ADD TO CART WITH TOAST =============
+  const handleAddToCart = async () => {
+    // Check if user is logged in
+    if (!session) {
+      showToast("Please sign in to add items to cart", "info");
+      setTimeout(() => {
+        router.push("/auth/login?callbackUrl=" + window.location.pathname);
+      }, 1000);
+      return;
+    }
 
-    // Create a normalized product object for localStorage
-    const productForStorage = {
+    // Check if product is in stock
+    if (product.is_sold_out) {
+      showToast("This item is currently sold out", "error");
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      await addToCart({
+        id: product.id,
+        title: product.name,
+        category: product.category_name || "Jewellery",
+        description: product.description || "",
+        weight: parseFloat(product.weight),
+        image: product.image_url,
+        inStock: !product.is_sold_out,
+      });
+
+      showToast(`${product.name} added to cart!`, "success");
+      
+    } catch (error: any) {
+      if (error.message.includes("sold out")) {
+        showToast("This item is currently sold out", "error");
+      } else if (error.message.includes("Unauthorized")) {
+        showToast("Please sign in to add items to cart", "info");
+        setTimeout(() => {
+          router.push("/auth/login?callbackUrl=" + window.location.pathname);
+        }, 1000);
+      } else {
+        showToast(error.message || "Failed to add to cart", "error");
+      }
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  // ============= TOGGLE WISHLIST WITH TOAST =============
+  const handleToggleWishlist = () => {
+    // Check if user is logged in
+    if (!session) {
+      showToast("Please sign in to save items", "info");
+      setTimeout(() => {
+        router.push("/auth/login?callbackUrl=" + window.location.pathname);
+      }, 1000);
+      return;
+    }
+
+    toggleWishlist({
       id: product.id,
       title: product.name,
       category: product.category_name || "Jewellery",
       description: product.description || "",
-      price: parseFloat(product.calculated_price),
+      weight: product.weight,
       image: product.image_url,
       inStock: !product.is_sold_out,
-    };
+    });
 
-    if (isWishlisted) {
-      items = items.filter((i: any) => i.id !== product.id);
-    } else {
-      items.push(productForStorage);
-    }
-
-    localStorage.setItem("wishlist", JSON.stringify(items));
-    setIsWishlisted(!isWishlisted);
-    window.dispatchEvent(new Event("wishlist-updated"));
+    // Show toast based on action
+    const action = isWishlisted ? "removed from" : "added to";
+    showToast(`${product.name} ${action} wishlist!`, isWishlisted ? "info" : "success");
   };
 
-  const addToCart = () => {
-    const cart = localStorage.getItem("cart");
-    const items = cart ? JSON.parse(cart) : [];
-
-    // Create a normalized product object for cart
-    const productForCart = {
-      id: product.id,
-      title: product.name,
-      category: product.category_name || "Jewellery",
-      description: product.description || "",
-      price: parseFloat(product.calculated_price),
-      image: product.image_url,
-      quantity: 1,
-    };
-
-    const existingIndex = items.findIndex((i: any) => i.id === product.id);
-
-    if (existingIndex > -1) {
-      items[existingIndex].quantity += 1;
-    } else {
-      items.push(productForCart);
-    }
-
-    localStorage.setItem("cart", JSON.stringify(items));
-    setIsInCart(true);
-    window.dispatchEvent(new Event("cart-updated"));
-  };
-
+  // ============= ENQUIRE VIA WHATSAPP =============
   const handleEnquire = () => {
     const message = `Hello, I'm interested in:
 *${product.name}* (${product.product_code})
 Weight: ${product.weight}g
-Price: ₹${parseInt(product.calculated_price).toLocaleString()}
 
 Image: ${product.image_url}`;
 
@@ -152,7 +173,6 @@ Image: ${product.image_url}`;
   }
 
   return (
-
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <button
@@ -164,7 +184,7 @@ Image: ${product.image_url}`;
         </button>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-          {/* Image Section */}
+          {/* IMAGE SECTION */}
           <div className="relative">
             <div className="aspect-square overflow-hidden rounded-2xl bg-gray-50">
               {product.image_url ? (
@@ -184,9 +204,21 @@ Image: ${product.image_url}`;
               )}
             </div>
 
+            {/* STOCK BADGE */}
+            <div className="absolute top-4 left-4">
+              {product.is_sold_out ? (
+                <div className="rounded-full bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-lg">
+                  SOLD OUT
+                </div>
+              ) : (
+                <div className="rounded-full bg-green-600 px-4 py-2 text-xs font-bold text-white shadow-lg">
+                  IN STOCK
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Details Section */}
+          {/* DETAILS SECTION */}
           <div className="flex flex-col">
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-gold-primary)]">
               {product.category_name || "Jewellery"}
@@ -196,19 +228,13 @@ Image: ${product.image_url}`;
               {product.name}
             </h1>
 
+            {/* 🔥 REMOVED PRICE - ONLY WEIGHT */}
             <div className="mt-6 space-y-2">
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-bold text-gray-900">
-                  ₹{parseInt(product.calculated_price).toLocaleString()}
-                </span>
-                <span className="text-sm text-gray-500">
-                  @ ₹{GOLD_RATE}/gram
-                </span>
+              <div className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+                <Scale size={24} className="text-[var(--color-gold-primary)]" />
+                <span>{product.weight}g</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Scale size={16} />
-                <span>Weight: {product.weight}g</span>
-              </div>
+              <p className="text-sm text-gray-500">Product Code: {product.product_code}</p>
             </div>
 
             {product.description && (
@@ -217,20 +243,31 @@ Image: ${product.image_url}`;
               </p>
             )}
 
+            {/* ACTION BUTTONS */}
             <div className="mt-8 space-y-3">
               <button
-                onClick={addToCart}
+                onClick={handleAddToCart}
+                disabled={product.is_sold_out || isAddingToCart}
                 className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-sm font-semibold transition ${
-                  isInCart
+                  product.is_sold_out
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                    : isInCart
                     ? "border-2 border-green-600 bg-green-50 text-green-700"
                     : "bg-black text-white hover:bg-gray-800"
                 }`}
               >
-                {isInCart ? (
+                {isAddingToCart ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Adding...
+                  </>
+                ) : isInCart ? (
                   <>
                     <Check size={18} />
                     Added to Cart
                   </>
+                ) : product.is_sold_out ? (
+                  "Sold Out"
                 ) : (
                   <>
                     <ShoppingBag size={18} />
@@ -241,7 +278,7 @@ Image: ${product.image_url}`;
 
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={toggleWishlist}
+                  onClick={handleToggleWishlist}
                   className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3 text-sm font-semibold transition ${
                     isWishlisted
                       ? "border-red-500 bg-red-50 text-red-500"
@@ -265,6 +302,7 @@ Image: ${product.image_url}`;
               </div>
             </div>
 
+            {/* FEATURES */}
             <div className="mt-10 grid grid-cols-2 gap-4 border-t border-gray-100 pt-8">
               {[
                 { icon: Shield, text: "BIS Hallmarked" },

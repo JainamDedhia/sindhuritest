@@ -1,9 +1,9 @@
-// app/api/cart/route.ts
+// app/api/wishlist/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/[...nextauth]/route";
-import { getUserCart, addToCart, syncLocalCartToDb } from "@/app/lib/dal/cart";
+import { getUserWishlist, addToWishlist, syncLocalWishlistToDb } from "@/app/lib/dal/wishlist";
 
-// GET - Fetch user's cart
+// GET - Fetch user's wishlist
 export async function GET() {
   try {
     const session = await auth();
@@ -15,7 +15,7 @@ export async function GET() {
       );
     }
 
-    const items = await getUserCart(session.user.id);
+    const items = await getUserWishlist(session.user.id);
     
     return NextResponse.json(items, {
       headers: {
@@ -24,15 +24,15 @@ export async function GET() {
     });
     
   } catch (error: any) {
-    console.error("Cart GET Error:", error);
+    console.error("Wishlist GET Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch cart" },
+      { error: error.message || "Failed to fetch wishlist" },
       { status: 500 }
     );
   }
 }
 
-// POST - Add item to cart or sync local cart
+// POST - Add item to wishlist or sync local wishlist
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -46,16 +46,16 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // SYNC LOCAL CART
+    // SYNC LOCAL WISHLIST
     if (body.syncLocal && Array.isArray(body.items)) {
-      console.log(`🔄 Syncing ${body.items.length} items for user ${session.user.id}`);
+      console.log(`🔄 Syncing ${body.items.length} wishlist items for user ${session.user.id}`);
       
-      const items = await syncLocalCartToDb(session.user.id, body.items);
+      const items = await syncLocalWishlistToDb(session.user.id, body.items);
       
       return NextResponse.json({ 
         success: true, 
         items,
-        message: "Cart synced successfully" 
+        message: "Wishlist synced successfully" 
       });
     }
 
@@ -67,31 +67,24 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`➕ Adding product ${body.productId} for user ${session.user.id}`);
+    console.log(`💖 Adding product ${body.productId} to wishlist for user ${session.user.id}`);
 
-    await addToCart(session.user.id, body.productId);
-    const items = await getUserCart(session.user.id);
+    await addToWishlist(session.user.id, body.productId);
+    const items = await getUserWishlist(session.user.id);
     
     return NextResponse.json({ 
       success: true, 
       items,
-      message: "Item added to cart" 
+      message: "Item added to wishlist" 
     });
     
   } catch (error: any) {
-    console.error("Cart POST Error:", error);
+    console.error("Wishlist POST Error:", error);
     
     if (error.message === "Product not found") {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
-      );
-    }
-    
-    if (error.message === "Product is sold out") {
-      return NextResponse.json(
-        { error: "This item is currently sold out" },
-        { status: 400 }
       );
     }
     
