@@ -4,15 +4,21 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings } from "lucide-react";
+import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings, } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
+import { AnimatePresence,motion } from "framer-motion";
+import { useRouter } from "next/router";
 
 export default function Navbar() {
+  const router = useRouter();
+  const pathname= usePathname();
+
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const pathname = usePathname();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // 🔥 FIX: Prevent hydration mismatch by only showing counts after mount
   const [mounted, setMounted] = useState(false);
@@ -28,6 +34,13 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!searchQuery.trim()) return;
+    setIsSearchOpen(false);
+    setIsMobileMenuOpen(false);
+    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+  }
   const isActive = (path: string) => 
     pathname === path ? "text-[var(--color-gold-primary)]" : "text-gray-900";
 
@@ -127,112 +140,137 @@ export default function Navbar() {
         </div>
 
         {/* DESKTOP LAYOUT */}
-        <div className="hidden w-full items-center justify-between md:flex">
-          
-          <Link href="/" className="flex items-center">
-            <img 
-              src="/assets/Sinduri_Logo.PNG" 
-              width={100} 
-              height={20} 
-              alt="Logo" 
-              className="mt-2" 
-            />
-          </Link>
-
-          <div className="flex gap-8 text-sm font-medium uppercase tracking-wide">
-            <Link href="/products" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/products")}`}>
-              Products
-            </Link>
-            <Link href="/wishlist" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/wishlist")}`}>
-              Wishlist
-            </Link>
-            <Link href="/about" className={`hover:text-[var(--color-gold-primary)] transition ${isActive("/about")}`}>
-              About
-            </Link>
+ <div className="hidden md:flex items-center gap-8">
+            {["Products", "Wishlist", "About"].map((item) => (
+              <Link 
+                key={item}
+                href={`/${item.toLowerCase()}`}
+                className={`relative text-sm font-medium uppercase tracking-widest transition-colors duration-300 hover:text-[var(--color-gold-primary)] 
+                  ${isActive(`/${item.toLowerCase()}`) ? "text-[var(--color-gold-primary)]" : "text-gray-600"}`}
+              >
+                {item}
+                {isActive(`/${item.toLowerCase()}`) && (
+                  <motion.div 
+                    layoutId="underline" 
+                    className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[var(--color-gold-primary)]" 
+                  />
+                )}
+              </Link>
+            ))}
           </div>
 
-          <div className="flex items-center gap-6">
-            {/* CART WITH COUNT BADGE */}
-            <Link href="/cart" className="relative group hover:text-[var(--color-gold-primary)] transition">
+          {/* ================= RIGHT ICONS & ACTIONS ================= */}
+          <div className="flex items-center gap-2 md:gap-5">
+            
+            {/* DESKTOP SEARCH BAR */}
+            <div className="hidden md:flex items-center">
+              <AnimatePresence>
+                {isSearchOpen ? (
+                  <motion.form
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 220, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    onSubmit={handleSearch}
+                    className="relative overflow-hidden"
+                  >
+                    <input 
+                      autoFocus
+                      type="text"
+                      placeholder="Search jewellery..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onBlur={() => !searchQuery && setIsSearchOpen(false)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-full py-1.5 pl-4 pr-8 text-sm focus:outline-none focus:border-[var(--color-gold-primary)]"
+                    />
+                    <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--color-gold-primary)]">
+                       <ChevronRight size={14} />
+                    </button>
+                  </motion.form>
+                ) : (
+                  <button 
+                    onClick={() => setIsSearchOpen(true)}
+                    className="p-2 text-gray-600 hover:text-[var(--color-gold-primary)] transition rounded-full hover:bg-gray-50"
+                  >
+                    <Search size={20} />
+                  </button>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* WISHLIST */}
+            <Link href="/wishlist" className="relative p-2 text-gray-600 hover:text-[var(--color-gold-primary)] transition hidden md:block">
+              <Heart size={20} />
+              {mounted && wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full ring-2 ring-white">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* CART */}
+            <Link href="/cart" className="relative p-2 text-gray-600 hover:text-[var(--color-gold-primary)] transition">
               <ShoppingBag size={20} />
               {mounted && cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
+                <span className="absolute top-0 right-0 h-4 w-4 bg-[var(--color-gold-primary)] text-white text-[9px] font-bold flex items-center justify-center rounded-full ring-2 ring-white">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* WISHLIST WITH COUNT BADGE */}
-            <Link href="/wishlist" className="relative group hover:text-[var(--color-gold-primary)] transition">
-              <Heart size={20} />
-              {mounted && wishlistCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-            
+            {/* PROFILE / LOGIN */}
             {session ? (
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button 
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm font-medium text-gray-700 transition hover:border-[var(--color-gold-primary)] hover:bg-gray-50"
+                  className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-transparent hover:border-gray-200 hover:bg-gray-50 transition"
                 >
-                  {session.user?.image ? (
-                    <img 
-                      src={session.user.image} 
-                      alt="Profile" 
-                      className="h-6 w-6 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
-                      <User size={14} />
-                    </div>
-                  )}
-                  <span>{session.user?.name?.split(" ")[0] || "Account"}</span>
+                  <img 
+                    src={session.user?.image || "https://ui-avatars.com/api/?name=" + session.user?.name} 
+                    alt="Profile" 
+                    className="h-8 w-8 rounded-full border border-gray-200 object-cover"
+                  />
                 </button>
 
-                {showProfileMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
-                      <div className="p-4 border-b border-gray-100">
-                        <p className="font-medium text-sm text-gray-900">{session.user?.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
-                      </div>
-                      <div className="p-2">
-                        <Link 
-                          href="/profile" 
-                          className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <Settings size={16} />
-                          My Profile
-                        </Link>
-                        <button 
-                          onClick={handleSignOut}
-                          className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
-                        >
-                          <LogOut size={16} />
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setShowProfileMenu(false)} />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-40 overflow-hidden"
+                      >
+                        <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                           <p className="font-semibold text-gray-900">{session.user?.name}</p>
+                           <p className="text-xs text-gray-500">{session.user?.email}</p>
+                        </div>
+                        <div className="p-2">
+                           <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 rounded-xl transition" onClick={() => setShowProfileMenu(false)}>
+                             <User size={16} /> My Profile
+                           </Link>
+                           <Link href="/orders" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 rounded-xl transition" onClick={() => setShowProfileMenu(false)}>
+                             <ShoppingBag size={16} /> My Orders
+                           </Link>
+                           <button 
+                              onClick={() => signOut()} 
+                              className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition"
+                           >
+                             <LogOut size={16} /> Sign Out
+                           </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
-              <Link
-                href="/auth/login"
-                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-              >
-                Sign in
+              <Link href="/auth/login" className="hidden md:flex items-center gap-2 px-5 py-2 bg-black text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-gray-800 transition shadow-md">
+                 Sign In
               </Link>
             )}
           </div>
         </div>
-      </div>
-
       {/* MOBILE MENU DROPDOWN */}
       <div 
         className={`
