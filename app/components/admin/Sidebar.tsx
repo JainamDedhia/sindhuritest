@@ -48,9 +48,12 @@ export default function AdminSidebar() {
     open: { height: "auto", opacity: 1, transition: { duration: 0.3, ease: "easeInOut" } }
   };
 
-  // === NEW: Snappy Hover Transition ===
-  // This makes the x-axis movement super fast and premium
-  const hoverTransition = { type: "spring", stiffness: 400, damping: 17 };
+  // ✅ FIXED: Proper type for Framer Motion transition
+  const hoverTransition = { 
+    type: "spring" as const, 
+    stiffness: 400, 
+    damping: 17 
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen bg-neutral-950 text-gray-400 fixed left-0 top-0 border-r border-white/5 z-50">
@@ -69,7 +72,7 @@ export default function AdminSidebar() {
         <Link href="/admin/analytics">
           <motion.div 
             whileHover={{ x: 5 }} 
-            transition={hoverTransition} // <--- APPLIED HERE
+            transition={hoverTransition}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 ${
               isActive("/admin/analytics") 
                 ? "bg-[var(--color-gold-primary)]/10 text-[var(--color-gold-primary)] font-medium border-l-2 border-[var(--color-gold-primary)]" 
@@ -115,7 +118,7 @@ export default function AdminSidebar() {
                   <Link href="/admin/products/add">
                     <motion.div 
                       whileHover={{ x: 5 }} 
-                      transition={hoverTransition} // <--- APPLIED HERE
+                      transition={hoverTransition}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/products/add") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -131,7 +134,7 @@ export default function AdminSidebar() {
                   <Link href="/admin/products">
                     <motion.div 
                        whileHover={{ x: 5 }} 
-                       transition={hoverTransition} // <--- APPLIED HERE
+                       transition={hoverTransition}
                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/products") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -146,7 +149,7 @@ export default function AdminSidebar() {
                   <Link href="/admin/categories">
                     <motion.div 
                        whileHover={{ x: 5 }} 
-                       transition={hoverTransition} // <--- APPLIED HERE
+                       transition={hoverTransition}
                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/categories") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -198,7 +201,7 @@ export default function AdminSidebar() {
                   <Link href="/admin/banners">
                     <motion.div 
                       whileHover={{ x: 5 }} 
-                      transition={hoverTransition} // <--- APPLIED HERE
+                      transition={hoverTransition}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/banners") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -214,7 +217,7 @@ export default function AdminSidebar() {
                   <Link href="/admin/banners/manage">
                     <motion.div 
                         whileHover={{ x: 5 }} 
-                        transition={hoverTransition} // <--- APPLIED HERE
+                        transition={hoverTransition}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/banners/manage") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -226,11 +229,10 @@ export default function AdminSidebar() {
                     </motion.div>
                   </Link>
 
-
                   <Link href="/admin/bento">
                     <motion.div 
                        whileHover={{ x: 5 }} 
-                       transition={hoverTransition} // <--- APPLIED HERE
+                       transition={hoverTransition}
                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                         isActive("/admin/categories") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
@@ -251,7 +253,7 @@ export default function AdminSidebar() {
         <Link href="/admin/gold-rate">
           <motion.div 
             whileHover={{ x: 5 }} 
-            transition={hoverTransition} // <--- APPLIED HERE
+            transition={hoverTransition}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 ${
               isActive("/admin/gold-rate") 
                 ? "bg-[var(--color-gold-primary)]/10 text-[var(--color-gold-primary)] font-medium border-l-2 border-[var(--color-gold-primary)]" 
