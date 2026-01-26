@@ -4,23 +4,16 @@ import type { NextRequest } from "next/server"
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
-
   console.log("🔒 Middleware check:", { pathname })
 
   // === ADMIN ROUTES - SEPARATE AUTHENTICATION ===
   if (pathname.startsWith("/admin")) {
-    // Allow login page
     if (pathname === "/admin/login") {
       return NextResponse.next()
     }
 
-    // Check for ADMIN session (not user session)
     const adminSession = request.cookies.get("admin_session")?.value
-
-    console.log("🔍 Admin auth check:", {
-      hasAdminSession: !!adminSession,
-      pathname
-    })
+    console.log("🔍 Admin auth check:", { hasAdminSession: !!adminSession, pathname })
 
     if (!adminSession) {
       console.log("❌ No admin session, redirecting to /admin/login")
@@ -33,8 +26,6 @@ export async function middleware(request: NextRequest) {
 
   // === PUBLIC ROUTES ===
   const publicPaths = ["/", "/products", "/product", "/about", "/contact", "/auth/login"]
-  
-
   const isPublic = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
   )
@@ -44,20 +35,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // === USER PROTECTED ROUTES (Wishlist, Cart) ===
-const userProtectedPaths = ["/wishlist", "/cart", "/profile"]
-
-  const isUserProtected = userProtectedPaths.some((path) =>
-    pathname.startsWith(path)
-  )
+  // === USER PROTECTED ROUTES (Wishlist, Cart, Profile) ===
+  const userProtectedPaths = ["/wishlist", "/cart", "/profile"]
+  const isUserProtected = userProtectedPaths.some((path) => pathname.startsWith(path))
 
   if (isUserProtected) {
-    // Check for NextAuth user session
-    const sessionToken = request.cookies.get("authjs.session-token")?.value
+    // 🔥 FIX: Check for BOTH cookie names (dev and production)
+    const devSessionToken = request.cookies.get("authjs.session-token")?.value
+    const prodSessionToken = request.cookies.get("__Secure-authjs.session-token")?.value
+    const sessionToken = devSessionToken || prodSessionToken
 
     console.log("🔍 User session check:", {
-      hasSessionToken: !!sessionToken,
-      pathname
+      hasDevToken: !!devSessionToken,
+      hasProdToken: !!prodSessionToken,
+      pathname,
+      allCookies: request.cookies.getAll().map(c => c.name) // Debug: show all cookies
     })
 
     if (!sessionToken) {
