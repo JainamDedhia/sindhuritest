@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState, Suspense } from "react"
 import { Loader2, ArrowRight } from "lucide-react"
 
-// ✅ STEP 1: Create a separate component for the login form
 function LoginForm() {
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
@@ -35,7 +34,8 @@ function LoginForm() {
     setIsSigningIn(true)
     console.log("🔐 Starting Google sign-in...");
     try {
-      await signIn("google", { callbackUrl: "/auth/login" })
+      // ✅ FIX: Don't specify callbackUrl - let NextAuth handle it automatically
+      await signIn("google")
     } catch (error) {
       console.error("❌ Sign in error:", error)
       setIsSigningIn(false)
@@ -124,7 +124,6 @@ function LoginForm() {
   )
 }
 
-// ✅ STEP 2: Wrap the component with Suspense in the default export
 export default function LoginPage() {
   return (
     <Suspense fallback={
