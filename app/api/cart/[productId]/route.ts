@@ -63,8 +63,11 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ productId: string }> }
 ) {
+  // Declare session at the top level so it's available in catch block
+  let session;
+  
   try {
-    const session = await auth();
+    session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -92,12 +95,15 @@ export async function DELETE(
     // Handle specific Prisma errors
     if (error.code === 'P2025') {
       // Record not found - this is OK, item already gone
-      const items = await getUserCart(session.user.id);
-      return NextResponse.json({ 
-        success: true, 
-        items,
-        message: "Item already removed" 
-      });
+      // session is now available here
+      if (session?.user?.id) {
+        const items = await getUserCart(session.user.id);
+        return NextResponse.json({ 
+          success: true, 
+          items,
+          message: "Item already removed" 
+        });
+      }
     }
     
     return NextResponse.json(
