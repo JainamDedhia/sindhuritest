@@ -4,7 +4,6 @@ import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
-// ✅ Create the auth instance
 const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
@@ -17,6 +16,21 @@ const { handlers, auth, signIn, signOut } = NextAuth({
 
   session: {
     strategy: "database",
+  },
+
+  // 🔥 FIX: Explicitly configure cookies for consistency
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" 
+        ? `__Secure-authjs.session-token`
+        : `authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
 
   pages: {
@@ -32,12 +46,9 @@ const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 
-  debug: true,
+  debug: process.env.NODE_ENV === "development",
 })
 
-// ✅ Export the auth function so other files can use it
 export { auth }
-
-// ✅ Export route handlers
 export const GET = handlers.GET
 export const POST = handlers.POST
