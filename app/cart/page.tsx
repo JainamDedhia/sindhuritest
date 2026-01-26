@@ -2,13 +2,15 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, Minus, Plus, ArrowRight, ShoppingBag, RefreshCw, AlertCircle } from "lucide-react";
+import { Trash2, Minus, Plus, ArrowRight, ShoppingBag, RefreshCw, Loader2 } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { 
     items, 
     updateQuantity, 
@@ -16,14 +18,25 @@ export default function CartPage() {
     isLoading,
     error,
     forceRefresh,
-    isSynced
   } = useCartStore();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Auto-refresh when page loads (if logged in)
+  // 🔥 CLIENT-SIDE AUTH CHECK
   useEffect(() => {
-    if (session?.user) {
+    console.log("🔐 Cart page - Auth status:", status);
+    
+    if (status === "loading") {
+      console.log("⏳ Waiting for session...");
+      return;
+    }
+    
+    if (status === "unauthenticated") {
+      console.log("❌ Not authenticated, redirecting to login");
+      router.replace("/auth/login?callbackUrl=/cart");
+    } else if (status === "authenticated") {
+      console.log("✅ Authenticated, loading cart");
+      // Auto-refresh cart when page loads
       const refreshCart = async () => {
         setIsRefreshing(true);
         await forceRefresh();
@@ -31,7 +44,7 @@ export default function CartPage() {
       };
       refreshCart();
     }
-  }, [session]);
+  }, [status, router, forceRefresh]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -39,6 +52,31 @@ export default function CartPage() {
     setIsRefreshing(false);
   };
 
+  // 🔥 SHOW LOADING WHILE CHECKING AUTH
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 SHOW NOTHING WHILE REDIRECTING
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 ONLY RENDER IF AUTHENTICATED
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
       
@@ -47,7 +85,6 @@ export default function CartPage() {
         <h1 className="text-2xl font-bold">Shopping Bag ({items.length})</h1>
         
         <div className="flex items-center gap-3">
-          {/* Manual Refresh Button */}
           {session?.user && (
             <button
               onClick={handleRefresh}
@@ -60,23 +97,6 @@ export default function CartPage() {
           )}
         </div>
       </div>
-
-      {/* ERROR DISPLAY */}
-      {error && (
-        <div className="mb-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
-          <AlertCircle size={20} className="text-red-600" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-900">Error syncing cart</p>
-            <p className="text-xs text-red-700">{error}</p>
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="text-sm font-medium text-red-600 hover:underline"
-          >
-            Retry
-          </button>
-        </div>
-      )}
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-16 text-center">
