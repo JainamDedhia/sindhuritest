@@ -1,6 +1,4 @@
-// ========================================
 // app/api/wishlist/route.ts - FIXED VERSION
-// ========================================
 import { NextResponse } from "next/server";
 import { auth } from "@/app/api/auth/[...nextauth]/route";
 import { getUserWishlist, addToWishlist, syncLocalWishlistToDb } from "@/app/lib/dal/wishlist";
@@ -111,64 +109,6 @@ export async function POST(req: Request) {
     
     return NextResponse.json(
       { error: error.message || "Failed to process request" },
-      { status: 500 }
-    );
-  }
-}
-
-// ========================================
-// app/api/wishlist/[productId]/route.ts - FIXED VERSION
-// ========================================
-
-// DELETE - Remove item from wishlist
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ productId: string }> }
-) {
-  try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      console.log("❌ DELETE Wishlist: No session");
-      return NextResponse.json(
-        { error: "Unauthorized" }, 
-        { status: 401 }
-      );
-    }
-
-    const { productId } = await params;
-    console.log(`🗑️ Removing product ${productId} from wishlist`);
-
-    const { removeFromWishlist, getUserWishlist } = await import("@/app/lib/dal/wishlist");
-    
-    await removeFromWishlist(session.user.id, productId);
-    const items = await getUserWishlist(session.user.id);
-    console.log(`✅ Item removed, remaining: ${items.length}`);
-    
-    return NextResponse.json({ 
-      success: true, 
-      items,
-      message: "Item removed from wishlist" 
-    });
-    
-  } catch (error: any) {
-    console.error("❌ Wishlist DELETE Error:", error.message);
-    
-    if (error.code === 'P2025') {
-      // Record not found - this is OK
-      const { getUserWishlist } = await import("@/app/lib/dal/wishlist");
-      const session = await auth();
-      const items = await getUserWishlist(session!.user!.id);
-      
-      return NextResponse.json({ 
-        success: true, 
-        items,
-        message: "Item already removed" 
-      });
-    }
-    
-    return NextResponse.json(
-      { error: error.message || "Failed to remove item" },
       { status: 500 }
     );
   }
