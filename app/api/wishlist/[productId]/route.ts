@@ -8,10 +8,14 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ productId: string }> }
 ) {
+  // Declare session at the top level so it's available in catch block
+  let session;
+  
   try {
-    const session = await auth();
+    session = await auth();
     
     if (!session?.user?.id) {
+      console.log("❌ DELETE Wishlist: No session");
       return NextResponse.json(
         { error: "Unauthorized" }, 
         { status: 401 }
@@ -19,11 +23,11 @@ export async function DELETE(
     }
 
     const { productId } = await params;
-    
     console.log(`🗑️ Removing product ${productId} from wishlist`);
 
     await removeFromWishlist(session.user.id, productId);
     const items = await getUserWishlist(session.user.id);
+    console.log(`✅ Item removed, remaining: ${items.length}`);
     
     return NextResponse.json({ 
       success: true, 
@@ -32,17 +36,19 @@ export async function DELETE(
     });
     
   } catch (error: any) {
-    console.error("Wishlist DELETE Error:", error);
+    console.error("❌ Wishlist DELETE Error:", error.message);
     
-    // Handle specific Prisma errors
     if (error.code === 'P2025') {
-      // Record not found - this is OK, item already gone
-      const items = await getUserWishlist(session.user.id);
-      return NextResponse.json({ 
-        success: true, 
-        items,
-        message: "Item already removed" 
-      });
+      // Record not found - this is OK
+      if (session?.user?.id) {
+        const items = await getUserWishlist(session.user.id);
+        
+        return NextResponse.json({ 
+          success: true, 
+          items,
+          message: "Item already removed" 
+        });
+      }
     }
     
     return NextResponse.json(
