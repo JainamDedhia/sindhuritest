@@ -2,10 +2,11 @@
 
 import { signIn, useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { Loader2, ArrowRight } from "lucide-react"
 
-export default function LoginPage() {
+// ✅ STEP 1: Create a separate component for the login form
+function LoginForm() {
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/"
@@ -15,7 +16,6 @@ export default function LoginPage() {
     if (status === "authenticated" && session?.user) {
       console.log("✅ User authenticated, checking onboarding status...");
       
-      // IMPORTANT: Small delay to ensure localStorage is accessible
       setTimeout(() => {
         const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
         console.log("📝 Onboarding status:", hasCompletedOnboarding);
@@ -27,7 +27,7 @@ export default function LoginPage() {
           console.log("🏠 Redirecting to:", callbackUrl);
           window.location.href = callbackUrl;
         }
-      }, 100); // Small delay
+      }, 100);
     }
   }, [status, session, callbackUrl]);
 
@@ -35,14 +35,13 @@ export default function LoginPage() {
     setIsSigningIn(true)
     console.log("🔐 Starting Google sign-in...");
     try {
-      await signIn("google", { callbackUrl: "/auth/login" }) // Redirect back to login page after auth
+      await signIn("google", { callbackUrl: "/auth/login" })
     } catch (error) {
       console.error("❌ Sign in error:", error)
       setIsSigningIn(false)
     }
   }
 
-  // --- LOADING STATE ---
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-50">
@@ -58,11 +57,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 px-4">
-      
-      {/* MAIN CARD - Centered & Single */}
       <div className="w-full max-w-[420px] rounded-2xl bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:p-12">
         
-        {/* Brand Header */}
         <div className="mb-8 text-center">
           <h2 className="font-serif text-2xl font-medium text-gray-900">
             Sinduri Jewellers
@@ -70,7 +66,6 @@ export default function LoginPage() {
           <div className="mx-auto mt-3 h-1 w-10 bg-[var(--color-gold-primary)]" />
         </div>
 
-        {/* Welcome Text */}
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             Welcome back
@@ -80,7 +75,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Button */}
         <div className="space-y-4">
           <button
             onClick={handleSignIn}
@@ -100,7 +94,6 @@ export default function LoginPage() {
             ) : (
               <>
                 <div className="flex items-center gap-4">
-                  {/* Google Icon */}
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 ring-1 ring-gray-100">
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -120,7 +113,6 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
            <p className="text-xs text-gray-400">
               By continuing, you agree to our Terms of Service and Privacy Policy.
@@ -129,5 +121,21 @@ export default function LoginPage() {
 
       </div>
     </div>
+  )
+}
+
+// ✅ STEP 2: Wrap the component with Suspense in the default export
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
