@@ -43,12 +43,26 @@ export default function AdminSidebar() {
     }
   };
 
+  // ✅ FIXED: Proper types for Framer Motion variants and transitions
   const menuAnimation = {
-    closed: { height: 0, opacity: 0, transition: { duration: 0.2, ease: "easeInOut" } },
-    open: { height: "auto", opacity: 1, transition: { duration: 0.3, ease: "easeInOut" } }
+    closed: { 
+      height: 0, 
+      opacity: 0, 
+      transition: { 
+        duration: 0.2, 
+        ease: "easeInOut" as const 
+      } 
+    },
+    open: { 
+      height: "auto" as const, 
+      opacity: 1, 
+      transition: { 
+        duration: 0.3, 
+        ease: "easeInOut" as const 
+      } 
+    }
   };
 
-  // ✅ FIXED: Proper type for Framer Motion transition
   const hoverTransition = { 
     type: "spring" as const, 
     stiffness: 400, 
