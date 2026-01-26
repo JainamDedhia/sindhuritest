@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings, } from "lucide-react";
+import { Menu, X, ShoppingBag, Heart, User, Search, LogOut, Settings, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
 import { AnimatePresence,motion } from "framer-motion";
