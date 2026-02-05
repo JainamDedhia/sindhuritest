@@ -15,7 +15,8 @@ import {
   Loader2,
   Share2,
   Plus,
-  Minus
+  Minus,
+  Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/app/store/cartStore";
@@ -30,6 +31,7 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isRemovingFromCart, setIsRemovingFromCart] = useState(false);
   
   // Default 'details' to open so they see info, but neatly
   const [expandedSection, setExpandedSection] = useState<string | null>("details");
@@ -37,10 +39,13 @@ export default function ProductDetailsPage() {
   const ADMIN_PHONE = "918668679249";
 
   const addToCart = useCartStore((state) => state.addItem);
-  const isInCart = useCartStore((state) => state.isInCart(product?.id || ""));
+  const removeFromCart = useCartStore((state) => state.removeItem);
+  const cartItems = useCartStore((state) => state.items);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
-  const isWishlisted = useWishlistStore((state) => state.isWishlisted(product?.id || ""));
   const showToast = useUIStore((state) => state.showToast);
+
+  // Check if product is in cart
+  const isInCart = product ? cartItems.some(item => item.id === product.id) : false;
 
   useEffect(() => {
     if (!params.id) return;
@@ -80,11 +85,28 @@ export default function ProductDetailsPage() {
     }
   };
 
+  const handleRemoveFromCart = async () => {
+    if (!session || !product) return;
+
+    setIsRemovingFromCart(true);
+    try {
+      await removeFromCart(product.id);
+      showToast("Removed from your cart", "success");
+    } catch (error: any) {
+      showToast(error.message || "Failed to remove", "error");
+    } finally {
+      setIsRemovingFromCart(false);
+    }
+  };
+
   const handleToggleWishlist = () => {
     if (!session) {
       showToast("Sign in to save items", "info");
       return;
     }
+    if (!product) return;
+    
+    const isWishlisted = useWishlistStore.getState().isWishlisted(product.id);
     toggleWishlist({
       id: product.id,
       title: product.name,
@@ -98,12 +120,12 @@ export default function ProductDetailsPage() {
   };
 
   const handleEnquire = () => {
+    if (!product) return;
     const msg = `Hi, I'm interested in *${product.name}* (Code: ${product.product_code})`;
     window.open(`https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   // Helper to fix the "Wall of Text" issue
-  // This splits your description by "Enter" keys and renders them as separate lines
   const renderDescription = (text: string) => {
     if (!text) return null;
     return text.split("\n").map((line, index) => (
@@ -112,6 +134,9 @@ export default function ProductDetailsPage() {
       </span>
     ));
   };
+
+  // Get wishlist status
+  const isWishlisted = product ? useWishlistStore.getState().isWishlisted(product.id) : false;
 
   if (loading) return <div className="h-screen w-full flex items-center justify-center"><Loader2 className="animate-spin text-[var(--color-gold-primary)]" /></div>;
   if (!product) return <div className="h-screen flex items-center justify-center">Product Not Found</div>;
@@ -162,7 +187,7 @@ export default function ProductDetailsPage() {
             {/* 1. Header Info */}
             <div className="border-b border-gray-100 pb-8">
               <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--color-gold-primary)] uppercase">
-                {product.category_name || "Fine Jewellery"}
+                {product.category_name || "Jewellery"}
               </span>
               <h1 className="mt-3 text-3xl lg:text-4xl font-serif text-gray-900 leading-tight">
                 {product.name}
@@ -179,38 +204,49 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
-            {/* 2. Action Buttons (Desktop) */}
+            {/* 2. Action Buttons (Desktop) - UPDATED */}
             <div className="hidden lg:flex flex-col gap-3 py-8">
-               <div className="flex gap-3">
+              <div className="flex gap-3">
+                {isInCart ? (
+                  // Show "Remove from Cart" button when already in cart
+                  <button
+                    onClick={handleRemoveFromCart}
+                    disabled={isRemovingFromCart}
+                    className="flex-1 h-12 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-all"
+                  >
+                    {isRemovingFromCart ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
+                    {isRemovingFromCart ? "Removing..." : "Remove from Cart"}
+                  </button>
+                ) : (
+                  // Show "Add to Cart" when not in cart
                   <button
                     onClick={handleAddToCart}
                     disabled={product.is_sold_out || isAddingToCart}
                     className={`flex-1 h-12 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all
                       ${product.is_sold_out 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : isInCart
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-gray-900 text-white hover:bg-black"
+                        : "bg-gray-900 text-white hover:bg-black"
                       }`}
                   >
-                    {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : isInCart ? <Check size={16} /> : <ShoppingBag size={16} />}
-                    {isInCart ? "In Cart" : product.is_sold_out ? "Sold Out" : "Add to Cart"}
+                    {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : <ShoppingBag size={16} />}
+                    {product.is_sold_out ? "Sold Out" : "Add to Cart"}
                   </button>
+                )}
 
-                  <button 
-                    onClick={handleToggleWishlist}
-                    className="h-12 w-12 flex items-center justify-center border border-gray-200 hover:border-black transition-colors"
-                  >
-                    <Heart size={18} className={isWishlisted ? "fill-red-500 text-red-500" : "text-gray-900"} />
-                  </button>
-               </div>
-               
-               <button 
-                 onClick={handleEnquire}
-                 className="h-12 w-full flex items-center justify-center gap-2 text-xs font-bold text-[var(--color-gold-primary)] border border-[var(--color-gold-primary)] hover:bg-[var(--color-gold-primary)] hover:text-white transition-colors uppercase tracking-widest"
-               >
-                 <MessageCircle size={16} /> Enquire via WhatsApp
-               </button>
+                <button 
+                  onClick={handleToggleWishlist}
+                  className="h-12 w-12 flex items-center justify-center border border-gray-200 hover:border-black transition-colors"
+                >
+                  <Heart size={18} className={isWishlisted ? "fill-red-500 text-red-500" : "text-gray-900"} />
+                </button>
+              </div>
+              
+              <button 
+                onClick={handleEnquire}
+                className="h-12 w-full flex items-center justify-center gap-2 text-xs font-bold text-[var(--color-gold-primary)] border border-[var(--color-gold-primary)] hover:bg-[var(--color-gold-primary)] hover:text-white transition-colors uppercase tracking-widest"
+              >
+                <MessageCircle size={16} /> Enquire via WhatsApp
+              </button>
             </div>
 
             {/* 3. Organized Details (Accordions) */}
@@ -223,7 +259,6 @@ export default function ProductDetailsPage() {
                  onClick={() => setExpandedSection(expandedSection === 'details' ? null : 'details')}
                >
                   <div className="text-sm">
-                     {/* THIS FIXES THE PARAGRAPH ISSUE */}
                      {renderDescription(product.description)}
                      
                      <div className="mt-4 grid grid-cols-2 gap-y-2 text-gray-500">
@@ -260,22 +295,32 @@ export default function ProductDetailsPage() {
         </div>
       </main>
 
-      {/* ================= MOBILE STICKY BAR ================= */}
+      {/* ================= MOBILE STICKY BAR - UPDATED ================= */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 lg:hidden z-50 flex gap-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-         <button 
-           onClick={handleEnquire}
-           className="flex-1 h-12 flex items-center justify-center border border-gray-200 text-gray-900 font-bold uppercase text-[10px] tracking-wider"
-         >
-           Enquire
-         </button>
-         <button
-           onClick={handleAddToCart}
-           disabled={product.is_sold_out}
-           className={`flex-[2] h-12 flex items-center justify-center gap-2 text-white font-bold uppercase text-[10px] tracking-wider
-             ${product.is_sold_out ? "bg-gray-400" : isInCart ? "bg-green-600" : "bg-gray-900"}`}
-         >
-           {isInCart ? "Go to Cart" : product.is_sold_out ? "Sold Out" : "Add to Cart"}
-         </button>
+        <button 
+          onClick={handleEnquire}
+          className="flex-1 h-12 flex items-center justify-center border border-gray-200 text-gray-900 font-bold uppercase text-[10px] tracking-wider"
+        >
+          Enquire
+        </button>
+        {isInCart ? (
+          <button
+            onClick={handleRemoveFromCart}
+            disabled={isRemovingFromCart}
+            className="flex-[2] h-12 flex items-center justify-center gap-2 bg-red-600 text-white font-bold uppercase text-[10px] tracking-wider"
+          >
+            {isRemovingFromCart ? "Removing..." : "Remove from Cart"}
+          </button>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={product.is_sold_out || isAddingToCart}
+            className={`flex-[2] h-12 flex items-center justify-center gap-2 text-white font-bold uppercase text-[10px] tracking-wider
+              ${product.is_sold_out ? "bg-gray-400" : "bg-gray-900"}`}
+          >
+            {isAddingToCart ? "Adding..." : (product.is_sold_out ? "Sold Out" : "Add to Cart")}
+          </button>
+        )}
       </div>
 
     </div>

@@ -92,8 +92,8 @@ export default function Navbar() {
             
             {/* DESKTOP SEARCH BAR (Icon on Right) */}
             <form 
-               onSubmit={handleSearch} 
-               className="hidden md:block relative group w-100%"
+              //  onSubmit={handleSearch} 
+              //  className="hidden md:block relative group w-100%"
             >
                <input 
                  type="text"

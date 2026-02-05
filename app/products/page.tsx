@@ -11,7 +11,7 @@ interface ApiProduct {
   description: string;
   weight: string;
   is_sold_out: boolean;
-  category_name: string;
+  category_id: string; // This should be category NAME not ID
   image: string;
 }
 
@@ -26,7 +26,7 @@ function ProductContent() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // 🔥 FILTER STATE
+  // FILTER STATE
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [stockFilter, setStockFilter] = useState<"all" | "inStock" | "soldOut">("all");
@@ -35,17 +35,23 @@ function ProductContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch products
         const prodRes = await fetch('/api/products');
         if (!prodRes.ok) throw new Error("Failed to Fetch Products");
         const prodData = await prodRes.json();
+        
+        console.log("📦 Products fetched:", prodData);
         setProducts(prodData);
 
+        // Fetch categories
         const catRes = await fetch('/api/categories');
         if (!catRes.ok) throw new Error("Failed to Fetch Categories");
         const catData = await catRes.json();
+        
+        console.log("📂 Categories fetched:", catData);
         setCategories(catData);
       } catch (error) {
-        console.log("Error Loading data: ", error);
+        console.error("Error Loading data:", error);
       } finally {
         setLoading(false);
       }
@@ -53,7 +59,7 @@ function ProductContent() {
     fetchData();
   }, []);
 
-  // 🔥 TOGGLE CATEGORY FILTER
+  // TOGGLE CATEGORY FILTER
   const toggleCategory = (categoryName: string) => {
     setSelectedCategories(prev => 
       prev.includes(categoryName)
@@ -62,7 +68,7 @@ function ProductContent() {
     );
   };
 
-  // 🔥 CLEAR ALL FILTERS
+  // CLEAR ALL FILTERS
   const clearFilters = () => {
     setSelectedCategories([]);
     setStockFilter("all");
@@ -70,17 +76,21 @@ function ProductContent() {
     setSearchQuery("");
   };
 
-  // 🔥 APPLY FILTERS
+  // APPLY FILTERS - FIXED
   let filteredProducts = products.filter((product) => {
     const query = searchQuery.toLowerCase();
+    
+    // Search matching - check name and category
     const matchesSearch = 
       product.name.toLowerCase().includes(query) ||
-      (product.category_name || "").toLowerCase().includes(query);
+      (product.category_id || "").toLowerCase().includes(query);
 
+    // Category matching - FIXED: compare with category_id field
     const matchesCategory = 
       selectedCategories.length === 0 || 
-      selectedCategories.includes(product.category_name);
+      selectedCategories.includes(product.category_id);
 
+    // Stock matching
     const matchesStock = 
       stockFilter === "all" ||
       (stockFilter === "inStock" && !product.is_sold_out) ||
@@ -89,7 +99,7 @@ function ProductContent() {
     return matchesSearch && matchesCategory && matchesStock;
   });
 
-  // 🔥 APPLY SORTING
+  // APPLY SORTING
   filteredProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "nameAsc":
@@ -123,10 +133,9 @@ function ProductContent() {
 
       <div className="container mx-auto max-w-6xl px-4 py-8">
         
-        {/* SEARCH & FILTER BAR */}
-        <div className="mb-8 flex items-center gap-3 max-w-xl">
+        {/* SEARCH & FILTER BAR - CENTERED */}
+        <div className="mb-8 flex items-center justify-center gap-3 max-w-2xl mx-auto">
           <div className="relative group flex-1">
-            {/* Input - Padding Right for Icon */}
             <input
               type="text"
               placeholder="Search for rings, gold..."
@@ -137,7 +146,6 @@ function ProductContent() {
                 focus:border-[var(--color-gold-primary)] focus:ring-1 focus:ring-[var(--color-gold-primary)]"
             />
 
-            {/* Clear Button (Visible when typing) */}
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
@@ -147,7 +155,6 @@ function ProductContent() {
               </button>
             )}
 
-            {/* Search Icon (Fixed on Right) */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--color-gold-primary)] transition-colors">
               <Search size={20} />
             </div>
@@ -170,7 +177,7 @@ function ProductContent() {
 
         {/* ACTIVE FILTERS CHIPS */}
         {activeFiltersCount > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
             <span className="text-xs font-medium text-gray-500">Active Filters:</span>
             
             {selectedCategories.map(cat => (
@@ -231,7 +238,7 @@ function ProductContent() {
                     id: item.id,
                     title: item.name,
                     weight: item.weight,
-                    category: item.category_name || "Jewelry",
+                    category: item.category_id || "Jewelry",
                     description: item.description,
                     image: item.image || "https://placehold.co/400x500",
                     inStock: !item.is_sold_out,
@@ -242,23 +249,20 @@ function ProductContent() {
         )}
       </div>
 
-      {/* 🔥 FILTER MODAL */}
+      {/* FILTER MODAL */}
       {isFilterOpen && (
         <>
-          {/* Backdrop with blur */}
           <div 
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={() => setIsFilterOpen(false)}
           />
           
-          {/* FILTER PANEL */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <div 
               className="w-full max-w-2xl max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto animate-in zoom-in-95 duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               
-              {/* Header with Gold Accent */}
               <div className="sticky top-0 bg-gradient-to-r from-white via-[var(--color-gold-primary)]/5 to-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10">
@@ -279,11 +283,10 @@ function ProductContent() {
                 </button>
               </div>
 
-              {/* Scrollable Content */}
               <div className="overflow-y-auto max-h-[calc(85vh-180px)] px-8 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   
-                  {/* LEFT COLUMN: CATEGORIES */}
+                  {/* CATEGORIES - FIXED WITH COUNTS */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500">
@@ -295,7 +298,9 @@ function ProductContent() {
                     </div>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                       {categories.map((category) => {
-                        const count = products.filter(p => p.category_name === category.name).length;
+                        // FIXED: Count products by matching category name with product.category_id
+                        const count = products.filter(p => p.category_id === category.name).length;
+                        
                         return (
                           <label
                             key={category.id}
@@ -323,7 +328,7 @@ function ProductContent() {
                     </div>
                   </div>
 
-                  {/* RIGHT COLUMN: AVAILABILITY & SORTING */}
+                  {/* AVAILABILITY & SORTING */}
                   <div className="space-y-8">
                     
                     {/* AVAILABILITY */}
@@ -381,7 +386,6 @@ function ProductContent() {
                 </div>
               </div>
 
-              {/* Footer Actions */}
               <div className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-6 flex gap-4">
                 <button
                   onClick={clearFilters}
