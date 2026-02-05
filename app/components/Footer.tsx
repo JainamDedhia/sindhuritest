@@ -13,7 +13,7 @@ import {
 
 export default function Footer() {
   // Replace with your actual WhatsApp number
-  const WHATSAPP_NUMBER = "919876543210"; 
+  const WHATSAPP_NUMBER = "918668679249"; 
   const WHATSAPP_MESSAGE = encodeURIComponent("Hello! I need assistance with Sinduri Jewellers.");
 
   return (

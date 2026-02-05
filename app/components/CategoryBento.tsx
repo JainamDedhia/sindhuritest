@@ -16,8 +16,8 @@ export default function CategoryBento() {
 
   if (items.length === 0) return null;
 
-  // Helper for Desktop Bento Grid Classes
-  const getSizeClass = (size: string) => {
+  // Helper for Desktop Grid
+  const getDesktopSizeClass = (size: string) => {
     switch(size) {
       case 'large': return "col-span-2 row-span-2";
       case 'wide': return "col-span-2";
@@ -27,68 +27,106 @@ export default function CategoryBento() {
   };
 
   return (
-    <section className="py-12 md:py-20 bg-white">
+    <section className="py-12 md:py-24 bg-white relative">
       
-      {/* HEADER */}
-      <div className="text-center max-w-2xl mx-auto mb-10 px-4">
-        <h2 className="font-serif text-3xl md:text-4xl text-gray-900">Shop by Category</h2>
-        <p className="mt-2 text-sm text-gray-500">Curated collections for every occasion.</p>
+      {/* HEADER SECTION */}
+      <div className="text-center max-w-2xl mx-auto mb-10 md:mb-16 px-6">
+        <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-[#C8A45D] block mb-3 opacity-90">
+          Our Collections
+        </span>
+        <h2 className="font-serif text-3xl md:text-5xl bg-gradient-to-r from-[#C8A45D] to-[#F3D6D1] bg-clip-text text-transparent pb-1">
+          Shop by Category
+        </h2>
       </div>
 
-      {/* ================= DESKTOP VIEW (The Bento Grid) ================= */}
-      {/* hidden lg:block -> Hides on mobile/tablet, Shows on Large Screens */}
-      <div className="hidden lg:block container mx-auto max-w-6xl px-8">
-        <div className="grid grid-cols-4 gap-4 auto-rows-[260px]">
-          {items.map((item) => (
-            <Link
-              key={item.id}
-              href={item.target_link}
-              className={`group relative overflow-hidden rounded-2xl bg-gray-100 ${getSizeClass(item.size)}`}
-            >
-              <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-110">
-                <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80" />
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="flex items-end justify-between translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  <div>
-                    <h3 className="font-serif text-2xl font-medium text-white">{item.title}</h3>
-                    <div className="h-0.5 w-0 bg-[var(--color-gold-primary)] group-hover:w-full transition-all duration-500 mt-1" />
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                    <ArrowRight size={18} />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ================= MOBILE/TABLET VIEW (Horizontal Scroller) ================= */}
-      {/* block lg:hidden -> Shows on mobile/tablet, Hides on Desktop */}
-      <div className="block lg:hidden w-full overflow-x-auto no-scrollbar pb-4 px-4">
-        <div className="flex gap-4">
-          {items.map((item) => (
-            <Link
-              key={item.id}
-              href={item.target_link}
-              className="flex-shrink-0 relative w-[160px] h-[220px] rounded-xl overflow-hidden group"
-            >
+      {/* ================= DESKTOP VIEW (Grid) ================= */}
+      <div className="hidden lg:grid container mx-auto max-w-[1400px] px-8 grid-cols-4 gap-6 auto-rows-[300px]">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            href={item.target_link}
+            className={`group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm hover:shadow-2xl transition-all duration-700 ${getDesktopSizeClass(item.size)}`}
+          >
+            <div className="absolute inset-0 transition-transform duration-1000 ease-out group-hover:scale-105">
               <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
-              
-              {/* Dark Overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              
-              <div className="absolute bottom-3 left-3 right-3">
-                 <h3 className="text-white font-medium text-sm text-center">{item.title}</h3>
-              </div>
-            </Link>
-          ))}
-          
-          {/* Spacer to allow scrolling to the end */}
-          <div className="w-2 flex-shrink-0" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+            </div>
+            
+            {/* Desktop Content */}
+            <div className="absolute bottom-0 left-0 w-full p-8 z-10">
+               <div className="flex items-end justify-between translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="text-left">
+                    <span className="text-[10px] uppercase tracking-widest text-[#F3D6D1] mb-1 block">Collection</span>
+                    <h3 className="font-serif text-3xl text-white tracking-wide">{item.title}</h3>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-full border border-white/30 text-white opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-white hover:text-black">
+                     <ArrowRight size={16} />
+                  </div>
+               </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* ================= MOBILE VIEW (Refined & Centered) ================= */}
+      <div className="lg:hidden px-5 flex flex-col gap-5">
+        
+        {/* 1. HERO CARD */}
+        {items.length > 0 && (
+          <Link 
+             href={items[0].target_link}
+             className="relative w-full aspect-[4/5] max-h-[55vh] rounded-[20px] overflow-hidden shadow-md group"
+          >
+             <img src={items[0].image_url} alt={items[0].title} className="h-full w-full object-cover" />
+             
+             {/* Stronger Bottom Gradient for Text Contrast */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+             
+             {/* Center Aligned Content */}
+             <div className="absolute bottom-8 inset-x-0 text-center z-10 px-4">
+                <h3 className="text-3xl font-serif text-white tracking-wide drop-shadow-md">
+                  {items[0].title}
+                </h3>
+                <div className="h-[2px] w-12 bg-[#C8A45D] mx-auto mt-3 rounded-full" />
+             </div>
+          </Link>
+        )}
+
+        {/* 2. SECONDARY GRID */}
+        {items.length > 1 && (
+          <div className="grid grid-cols-2 gap-4">
+             {items.slice(1).map((item) => (
+               <Link
+                 key={item.id}
+                 href={item.target_link}
+                 className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm bg-gray-50"
+               >
+                 <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
+                 
+                 {/* Gradient Fade */}
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
+                 
+                 {/* Center Aligned Text */}
+                 <div className="absolute bottom-5 inset-x-0 text-center px-2">
+                    <h3 className="text-xl font-serif text-white tracking-wide drop-shadow-sm leading-tight">
+                      {item.title}
+                    </h3>
+                 </div>
+               </Link>
+             ))}
+          </div>
+        )}
+
+        {/* 3. GLOBAL CTA */}
+        <div className="mt-6 text-center pb-8 border-b border-gray-100">
+           <Link 
+             href="/products" 
+             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#4A3F35] hover:text-[#C8A45D] transition-colors py-2"
+           >
+              View All Categories <ArrowRight size={14} className="text-[#C8A45D]" />
+           </Link>
         </div>
+
       </div>
 
     </section>

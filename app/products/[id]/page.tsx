@@ -34,7 +34,7 @@ export default function ProductDetailsPage() {
   // Default 'details' to open so they see info, but neatly
   const [expandedSection, setExpandedSection] = useState<string | null>("details");
 
-  const ADMIN_PHONE = "917021419016";
+  const ADMIN_PHONE = "918668679249";
 
   const addToCart = useCartStore((state) => state.addItem);
   const isInCart = useCartStore((state) => state.isInCart(product?.id || ""));

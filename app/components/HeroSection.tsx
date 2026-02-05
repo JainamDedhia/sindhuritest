@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { ChevronRight, ChevronLeft, Pause, Play } from "lucide-react";
+import MobileStackCarousel from "./MobileStackCarousel";
 
 type Banner = {
   id: string;
@@ -32,8 +33,9 @@ export default function HeroSection() {
 
   return (
     <section className="w-full bg-white relative group">
-      {/* DESKTOP (Height 500px) */}
-      <div className="hidden md:block h-[500px] relative overflow-hidden">
+      
+      {/* ================= DESKTOP (Luxury Parallax) ================= */}
+      <div className="hidden md:block h-[550px] relative overflow-hidden">
         {desktopBanners.length > 0 ? (
           <LuxurySlider banners={desktopBanners} />
         ) : (
@@ -43,22 +45,30 @@ export default function HeroSection() {
         )}
       </div>
 
-      {/* MOBILE (Height 55vh - optimized for phones) */}
-      <div className="block md:hidden h-[55vh] min-h-[400px] relative overflow-hidden">
+      {/* ================= MOBILE (Stack Carousel) ================= */}
+      {/* Optimized height for mobile stack */}
+      <div className="block md:hidden h-[60vh] min-h-[500px] relative overflow-hidden bg-[#FAFAFA]">
         {mobileBanners.length > 0 ? (
-          <LuxurySlider banners={mobileBanners} isMobile />
+          <MobileStackCarousel banners={mobileBanners} />
         ) : (
           <div className="h-full flex items-center justify-center bg-[#FDFBF7]">
             <span className="text-gray-400">Sinduri</span>
           </div>
         )}
       </div>
+
     </section>
   );
 }
 
-/* ================= LUXURY PARALLAX SLIDER ================= */
-function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobile?: boolean }) {
+/* =========================================================================
+   1. MOBILE COMPONENT: STACK CAROUSEL (Original Code)
+   ========================================================================= */
+
+/* =========================================================================
+   2. DESKTOP COMPONENT: LUXURY PARALLAX SLIDER
+   ========================================================================= */
+function LuxurySlider({ banners }: { banners: Banner[] }) {
   const [[page, direction], setPage] = useState([0, 0]);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -69,34 +79,20 @@ function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobi
     setPage([page + newDirection, newDirection]);
   }, [page]);
 
-  // Auto-Play
   useEffect(() => {
     if (!isAutoPlaying) return;
-    const timer = setInterval(() => paginate(1), 6000); // 6s per slide
+    const timer = setInterval(() => paginate(1), 6000);
     return () => clearInterval(timer);
   }, [page, isAutoPlaying, paginate]);
 
-  // --- ANIMATION VARIANTS (The "Apple" Feel) ---
   const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? "100%" : "-100%",
-      opacity: 1, // Keep full opacity to avoid "flashing"
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? "100%" : "-100%",
-      opacity: 1,
-    }),
+    enter: (direction: number) => ({ x: direction > 0 ? "100%" : "-100%", opacity: 1 }),
+    center: { zIndex: 1, x: 0, opacity: 1 },
+    exit: (direction: number) => ({ zIndex: 0, x: direction < 0 ? "100%" : "-100%", opacity: 1 }),
   };
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gray-900">
-      
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={page}
@@ -105,39 +101,27 @@ function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobi
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 }, // Snappy but smooth
-            opacity: { duration: 0.2 },
-          }}
+          transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
           className="absolute inset-0 w-full h-full"
         >
-          {/* PARALLAX IMAGE 
-             The image slightly scales up on entry (scale: 1.05) to give a breathing effect 
-          */}
           <motion.img
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 6, ease: "easeOut" }} // Slow "Ken Burns" zoom
+            transition={{ duration: 6, ease: "easeOut" }}
             src={currentBanner.image_url}
             alt={currentBanner.title || "Banner"}
             className="w-full h-full object-cover"
             draggable={false}
           />
-
-          {/* TEXT LAYER (Only renders if DB has text) 
-             If your banner is an image-only graphic, this won't run, keeping it clean.
-          */}
           {(currentBanner.title || currentBanner.subtitle) && (
             <>
-              {/* Gradient only when text exists */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-90" />
-              
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 text-center text-white z-10 px-6">
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-xs md:text-sm font-medium tracking-[0.3em] uppercase mb-3 text-gold-200"
+                  className="text-sm font-medium tracking-[0.3em] uppercase mb-3 text-gold-200"
                 >
                   {currentBanner.subtitle}
                 </motion.p>
@@ -145,7 +129,7 @@ function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobi
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-3xl md:text-5xl font-serif tracking-wide"
+                  className="text-5xl font-serif tracking-wide"
                 >
                   {currentBanner.title}
                 </motion.h2>
@@ -155,9 +139,6 @@ function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobi
         </motion.div>
       </AnimatePresence>
 
-      {/* ================= CONTROLS (Glassmorphism) ================= */}
-      
-      {/* 1. Progress Indicators (Bottom Center) */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
         {banners.map((_, i) => (
           <button
@@ -166,54 +147,26 @@ function LuxurySlider({ banners, isMobile = false }: { banners: Banner[], isMobi
               const newDir = i > imageIndex ? 1 : -1;
               setPage([page + (i - imageIndex), newDir]);
             }}
-            className="group relative py-2" // Larger hit area
+            className="group relative py-2"
           >
-            {/* The Dot */}
-            <div 
-              className={`h-1.5 rounded-full transition-all duration-500 ease-out shadow-sm
-                ${i === imageIndex ? "w-8 bg-white" : "w-1.5 bg-white/40 group-hover:bg-white/70"}
-              `} 
-            />
+            <div className={`h-1.5 rounded-full transition-all duration-500 ease-out shadow-sm ${i === imageIndex ? "w-8 bg-white" : "w-1.5 bg-white/40 group-hover:bg-white/70"}`} />
           </button>
         ))}
       </div>
 
-      {/* 2. Floating Navigation Capsule (Desktop Only) */}
-      {!isMobile && banners.length > 1 && (
+      {banners.length > 1 && (
         <div className="absolute bottom-6 right-8 z-20 hidden md:flex items-center gap-1 p-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shadow-lg">
-          
-          <button
-            onClick={() => paginate(-1)}
-            className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all"
-          >
+          <button onClick={() => paginate(-1)} className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all">
             <ChevronLeft size={18} />
           </button>
-          
-          {/* Pause/Play Toggle */}
-          <button
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all"
-          >
+          <button onClick={() => setIsAutoPlaying(!isAutoPlaying)} className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all">
             {isAutoPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
           </button>
-
-          <button
-            onClick={() => paginate(1)}
-            className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all"
-          >
+          <button onClick={() => paginate(1)} className="p-2 rounded-full text-white/80 hover:bg-white hover:text-black transition-all">
             <ChevronRight size={18} />
           </button>
         </div>
       )}
-
-      {/* 3. Mobile Swipe Zones (Invisible) */}
-      {isMobile && (
-        <>
-          <div className="absolute inset-y-0 left-0 w-1/4 z-10" onClick={() => paginate(-1)} />
-          <div className="absolute inset-y-0 right-0 w-1/4 z-10" onClick={() => paginate(1)} />
-        </>
-      )}
-
     </div>
   );
 }

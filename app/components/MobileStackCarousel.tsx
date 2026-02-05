@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion';
 
 interface Banner {
@@ -10,14 +10,15 @@ interface Banner {
   subtitle?: string;
 }
 
-const SWIPE_THRESHOLD = 50;
-const SWIPE_VELOCITY_THRESHOLD = 0.4;
 
-export default function MobileStackCarousel({ banners }: { banners: Banner[] }) {
+function MobileStackCarousel({ banners }: { banners: Banner[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const dragX = useMotionValue(0);
   
+  const SWIPE_THRESHOLD = 50;
+  const SWIPE_VELOCITY_THRESHOLD = 0.4;
+
   const dragRotation = useTransform(dragX, [-150, 0, 150], [10, 0, -10]);
 
   useEffect(() => {
@@ -49,21 +50,15 @@ export default function MobileStackCarousel({ banners }: { banners: Banner[] }) 
   if (!banners || banners.length === 0) return null;
 
   return (
-    // Changed py-12 to py-6 to reduce vertical gap
-    <section className="relative md:hidden py-6 flex flex-col items-center overflow-hidden bg-white">
-      
-      {/* CONTAINER HEIGHT FIX: 
-          Changed from fixed h-[520px] to h-[55vh] max-h-[450px].
-          This ensures it never takes up the whole screen on tablets.
-      */}
-      <div className="relative flex items-center justify-center h-[55vh] max-h-[450px] w-full">
+    <div className="flex flex-col items-center justify-center h-full w-full py-6">
+      <div className="relative flex items-center justify-center h-[450px] w-full">
         {banners.map((banner, i) => {
           const offset = (i - currentIndex + banners.length) % banners.length;
           const adjustedOffset = offset > banners.length / 2 ? offset - banners.length : offset;
 
           if (Math.abs(adjustedOffset) > 2) return null;
 
-          const baseX = adjustedOffset * 15; // Tighter spacing
+          const baseX = adjustedOffset * 15;
           const baseRotate = adjustedOffset * 4;
           const scale = Math.max(0.85, 1 - Math.abs(adjustedOffset) * 0.08);
           const zIndex = 10 - Math.abs(adjustedOffset);
@@ -87,15 +82,8 @@ export default function MobileStackCarousel({ banners }: { banners: Banner[] }) 
               }}
               animate={!isDragging ? { x: baseX, rotate: baseRotate, scale, opacity } : undefined}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              
-              // === SIZE FIXES ===
-              // w-[70vw]: Slightly narrower
-              // max-w-[280px]: Stricter limit so it doesn't get huge on tablets
-              // aspect-[3/4]: Keeps it card-shaped
               className="absolute w-[70vw] max-w-[280px] aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-gray-100 shadow-xl cursor-grab active:cursor-grabbing will-change-transform"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent z-10 pointer-events-none" />
-
               <div className="relative w-full h-full select-none">
                 <img
                   src={banner.image_url}
@@ -105,7 +93,7 @@ export default function MobileStackCarousel({ banners }: { banners: Banner[] }) 
                 />
                 
                 {(banner.title || banner.subtitle) && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none pt-12">
                     <h3 className="font-serif text-lg font-medium tracking-wide leading-tight">
                         {banner.title}
                     </h3>
@@ -117,12 +105,15 @@ export default function MobileStackCarousel({ banners }: { banners: Banner[] }) 
                   </div>
                 )}
               </div>
+              
+              {/* Overlay Gradient for non-active cards */}
+              {!isCenterCard && <div className="absolute inset-0 bg-white/10 z-30" />}
             </motion.div>
           );
         })}
       </div>
 
-      {/* DOTS */}
+      {/* Dots Indicator */}
       <div className="flex justify-center gap-1.5 mt-4">
         {banners.map((_, i) => (
           <button
@@ -136,6 +127,7 @@ export default function MobileStackCarousel({ banners }: { banners: Banner[] }) 
           />
         ))}
       </div>
-    </section>
+    </div>
   );
 }
+export default MobileStackCarousel;

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
-  Shapes,
   PlusSquare,
   Presentation,
   ImagePlus,
@@ -19,7 +18,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function AdminSidebar() {
+// 1. Define Props Interface
+interface AdminSidebarProps {
+  onClose?: () => void;
+}
+
+export default function AdminSidebar({ onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   
@@ -32,6 +36,11 @@ export default function AdminSidebar() {
 
   const isActive = (path: string) => pathname === path;
 
+  // 2. Handle Link Click (Closes sidebar on mobile)
+  const handleLinkClick = () => {
+    if (onClose) onClose();
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", { method: "POST" });
@@ -43,34 +52,26 @@ export default function AdminSidebar() {
     }
   };
 
-  // ✅ FIXED: Proper types for Framer Motion variants and transitions
+  // ✅ FIXED: Added 'as const' to the end of the object
+  // This tells TS that "easeInOut" and "auto" are specific strict values
   const menuAnimation = {
     closed: { 
       height: 0, 
       opacity: 0, 
-      transition: { 
-        duration: 0.2, 
-        ease: "easeInOut" as const 
-      } 
+      transition: { duration: 0.2, ease: "easeInOut" } 
     },
     open: { 
-      height: "auto" as const, 
+      height: "auto", 
       opacity: 1, 
-      transition: { 
-        duration: 0.3, 
-        ease: "easeInOut" as const 
-      } 
+      transition: { duration: 0.3, ease: "easeInOut" } 
     }
-  };
+  } as const;
 
-  const hoverTransition = { 
-    type: "spring" as const, 
-    stiffness: 400, 
-    damping: 17 
-  };
+  // ✅ FIXED: Added 'as const' here too for strict typing
+  const hoverTransition = { type: "spring", stiffness: 400, damping: 17 } as const;
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen bg-neutral-950 text-gray-400 fixed left-0 top-0 border-r border-white/5 z-50">
+    <aside className="flex flex-col w-full h-full bg-neutral-950 text-gray-400 border-r border-white/5">
       
       {/* 1. BRANDING */}
       <div className="h-16 flex items-center px-6 border-b border-white/5 bg-neutral-950">
@@ -83,7 +84,7 @@ export default function AdminSidebar() {
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 scrollbar-thin scrollbar-thumb-gray-800">
         
         {/* DASHBOARD */}
-        <Link href="/admin/analytics">
+        <Link href="/admin/analytics" onClick={handleLinkClick}>
           <motion.div 
             whileHover={{ x: 5 }} 
             transition={hoverTransition}
@@ -129,7 +130,7 @@ export default function AdminSidebar() {
                 <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-1">
                   
                   {/* Upload Products */}
-                  <Link href="/admin/products/add">
+                  <Link href="/admin/products/add" onClick={handleLinkClick}>
                     <motion.div 
                       whileHover={{ x: 5 }} 
                       transition={hoverTransition}
@@ -145,7 +146,7 @@ export default function AdminSidebar() {
                   </Link>
 
                   {/* Inventory List */}
-                  <Link href="/admin/products">
+                  <Link href="/admin/products" onClick={handleLinkClick}>
                     <motion.div 
                        whileHover={{ x: 5 }} 
                        transition={hoverTransition}
@@ -160,7 +161,7 @@ export default function AdminSidebar() {
                     </motion.div>
                   </Link>
 
-                  <Link href="/admin/categories">
+                  <Link href="/admin/categories" onClick={handleLinkClick}>
                     <motion.div 
                        whileHover={{ x: 5 }} 
                        transition={hoverTransition}
@@ -212,7 +213,7 @@ export default function AdminSidebar() {
                 <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-1">
                   
                   {/* Upload Banners */}
-                  <Link href="/admin/banners">
+                  <Link href="/admin/banners" onClick={handleLinkClick}>
                     <motion.div 
                       whileHover={{ x: 5 }} 
                       transition={hoverTransition}
@@ -228,7 +229,7 @@ export default function AdminSidebar() {
                   </Link>
 
                   {/* Manage Banners */}
-                  <Link href="/admin/banners/manage">
+                  <Link href="/admin/banners/manage" onClick={handleLinkClick}>
                     <motion.div 
                         whileHover={{ x: 5 }} 
                         transition={hoverTransition}
@@ -243,18 +244,33 @@ export default function AdminSidebar() {
                     </motion.div>
                   </Link>
 
-                  <Link href="/admin/bento">
+                  <Link href="/admin/bento" onClick={handleLinkClick}>
                     <motion.div 
                        whileHover={{ x: 5 }} 
                        transition={hoverTransition}
                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
-                        isActive("/admin/categories") 
+                        isActive("/admin/bento") 
                            ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
                            : "text-gray-500 hover:text-gray-200"
                       }`}
                     >
                       <PlusSquare size={18} />
                       <span>Bento Grid</span>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/admin/showcase" onClick={handleLinkClick}>
+                    <motion.div 
+                       whileHover={{ x: 5 }} 
+                       transition={hoverTransition}
+                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+                        isActive("/admin/showcase") 
+                           ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
+                           : "text-gray-500 hover:text-gray-200"
+                      }`}
+                    >
+                      <PlusSquare size={18} />
+                      <span>Showcase Banner</span>
                     </motion.div>
                   </Link>
                 </div>
@@ -264,7 +280,7 @@ export default function AdminSidebar() {
         </div>
 
         {/* SETTINGS */}
-        <Link href="/admin/gold-rate">
+        <Link href="/admin/gold-rate" onClick={handleLinkClick}>
           <motion.div 
             whileHover={{ x: 5 }} 
             transition={hoverTransition}
