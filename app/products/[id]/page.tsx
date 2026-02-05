@@ -15,8 +15,7 @@ import {
   Loader2,
   Share2,
   Plus,
-  Minus,
-  Trash2
+  Minus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/app/store/cartStore";
@@ -31,7 +30,6 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isRemovingFromCart, setIsRemovingFromCart] = useState(false);
   
   // Default 'details' to open so they see info, but neatly
   const [expandedSection, setExpandedSection] = useState<string | null>("details");
@@ -39,7 +37,6 @@ export default function ProductDetailsPage() {
   const ADMIN_PHONE = "918668679249";
 
   const addToCart = useCartStore((state) => state.addItem);
-  const removeFromCart = useCartStore((state) => state.removeItem);
   const cartItems = useCartStore((state) => state.items);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const showToast = useUIStore((state) => state.showToast);
@@ -82,20 +79,6 @@ export default function ProductDetailsPage() {
       showToast(error.message || "Failed to add", "error");
     } finally {
       setIsAddingToCart(false);
-    }
-  };
-
-  const handleRemoveFromCart = async () => {
-    if (!session || !product) return;
-
-    setIsRemovingFromCart(true);
-    try {
-      await removeFromCart(product.id);
-      showToast("Removed from your cart", "success");
-    } catch (error: any) {
-      showToast(error.message || "Failed to remove", "error");
-    } finally {
-      setIsRemovingFromCart(false);
     }
   };
 
@@ -187,7 +170,7 @@ export default function ProductDetailsPage() {
             {/* 1. Header Info */}
             <div className="border-b border-gray-100 pb-8">
               <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--color-gold-primary)] uppercase">
-                {product.category_name || "Jewellery"}
+                {product.category_name || "Fine Jewellery"}
               </span>
               <h1 className="mt-3 text-3xl lg:text-4xl font-serif text-gray-900 leading-tight">
                 {product.name}
@@ -204,18 +187,17 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
-            {/* 2. Action Buttons (Desktop) - UPDATED */}
+            {/* 2. Action Buttons (Desktop) - FIXED */}
             <div className="hidden lg:flex flex-col gap-3 py-8">
               <div className="flex gap-3">
                 {isInCart ? (
-                  // Show "Remove from Cart" button when already in cart
+                  // Show "View Cart" button when already in cart
                   <button
-                    onClick={handleRemoveFromCart}
-                    disabled={isRemovingFromCart}
-                    className="flex-1 h-12 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-all"
+                    onClick={() => router.push('/cart')}
+                    className="flex-1 h-12 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest bg-green-600 text-white hover:bg-green-700 transition-all"
                   >
-                    {isRemovingFromCart ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
-                    {isRemovingFromCart ? "Removing..." : "Remove from Cart"}
+                    <Check size={16} />
+                    View Cart
                   </button>
                 ) : (
                   // Show "Add to Cart" when not in cart
@@ -295,7 +277,7 @@ export default function ProductDetailsPage() {
         </div>
       </main>
 
-      {/* ================= MOBILE STICKY BAR - UPDATED ================= */}
+      {/* ================= MOBILE STICKY BAR - FIXED ================= */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 lg:hidden z-50 flex gap-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <button 
           onClick={handleEnquire}
@@ -305,20 +287,19 @@ export default function ProductDetailsPage() {
         </button>
         {isInCart ? (
           <button
-            onClick={handleRemoveFromCart}
-            disabled={isRemovingFromCart}
-            className="flex-[2] h-12 flex items-center justify-center gap-2 bg-red-600 text-white font-bold uppercase text-[10px] tracking-wider"
+            onClick={() => router.push('/cart')}
+            className="flex-[2] h-12 flex items-center justify-center gap-2 bg-green-600 text-white font-bold uppercase text-[10px] tracking-wider"
           >
-            {isRemovingFromCart ? "Removing..." : "Remove from Cart"}
+            View Cart
           </button>
         ) : (
           <button
             onClick={handleAddToCart}
-            disabled={product.is_sold_out || isAddingToCart}
+            disabled={product.is_sold_out}
             className={`flex-[2] h-12 flex items-center justify-center gap-2 text-white font-bold uppercase text-[10px] tracking-wider
               ${product.is_sold_out ? "bg-gray-400" : "bg-gray-900"}`}
           >
-            {isAddingToCart ? "Adding..." : (product.is_sold_out ? "Sold Out" : "Add to Cart")}
+            {product.is_sold_out ? "Sold Out" : "Add to Cart"}
           </button>
         )}
       </div>
