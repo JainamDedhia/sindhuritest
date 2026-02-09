@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { Sparkles, TrendingUp } from "lucide-react";
 
 export default function GoldRateBanner() {
   const [rate, setRate] = useState<string | null>(null);
@@ -23,51 +22,53 @@ export default function GoldRateBanner() {
     fetchRate();
   }, []);
 
-  // Loading state: Render a subtle skeleton or nothing to prevent layout shift
-  if (loading) return <div className="w-full h-10 bg-neutral-950" />;
+  if (loading) return <div className="h-10 w-full bg-[#C8A45D]" />; // Skeleton
 
   return (
-    // changed to Neutral-950 (Rich Black) for that Premium Look
-    <div className="w-full bg-neutral-950 border-b border-white/5 text-white relative z-40">
+    // RICH GOLD GRADIENT BACKGROUND
+    <div className="w-full bg-gradient-to-r from-[#C8A45D] via-[#D4B886] to-[#C8A45D] border-b border-[#B08D55] relative z-40 shadow-sm cursor-default group overflow-hidden transition-all duration-500 hover:shadow-md">
       
-      <div className="container mx-auto h-10 flex items-center justify-between px-4 md:px-6">
+      {/* Subtle Shine Effect on Hover */}
+      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-500" />
+      
+      <div className="container mx-auto h-10 flex items-center justify-center gap-3 md:gap-8 px-4 text-sm relative z-10">
         
-        {/* LEFT: Live Indicator (Clean Red Dot) */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-          </div>
-          <span className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">
-            Live Market
+        {/* Animated Sparkle Icon */}
+        <Sparkles 
+          size={16} 
+          className="text-[#5E4B4B] group-hover:rotate-12 transition-transform duration-500 hidden md:block" 
+          fill="currentColor"
+        />
+
+        {/* The Content */}
+        <div className="flex items-center gap-3">
+          
+          <span className="text-[#5E4B4B] font-bold tracking-widest uppercase text-[10px] md:text-xs opacity-90 group-hover:opacity-100 transition-opacity">
+            Today's Gold Rate (22K)
           </span>
+
+          <div className="w-px h-4 bg-[#8C7B7B]/40" />
+
+          {/* Price - Scales on Hover */}
+          {rate && (
+            <div className="flex items-center gap-1.5 transform group-hover:scale-105 transition-transform duration-300 origin-left">
+               <span className="font-serif text-[#2A0A0A] font-extrabold text-base md:text-lg tracking-wide drop-shadow-sm">
+                 ₹{Number(rate).toLocaleString('en-IN')}
+               </span>
+               <span className="text-[10px] text-[#5E4B4B] font-bold uppercase mt-1">/ gm</span>
+               
+               {/* Tiny Up Arrow */}
+               <TrendingUp size={12} className="text-[#2A0A0A] ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-y-1" />
+            </div>
+          )}
         </div>
 
-        {/* CENTER: The Rate (Hero) */}
-        {rate && (
-          <motion.div 
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-baseline gap-2"
-          >
-            <span className="hidden md:inline text-xs text-gray-500 font-medium tracking-wide">
-              Standard Gold (22K):
-            </span>
-            <span className="text-sm md:text-base font-serif text-[var(--color-gold-primary)] font-semibold tracking-wide">
-              ₹{Number(rate).toLocaleString('en-IN')}
-            </span>
-            <span className="text-[10px] text-gray-600">/gm</span>
-            
-            {/* Subtle Up Arrow */}
-            <TrendingUp size={12} className="text-green-500 ml-1 mb-0.5" />
-          </motion.div>
-        )}
-
-        {/* RIGHT: Timestamp (Minimalist) */}
-        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-gray-600 font-medium">
-          <Clock size={10} />
-          <span>Updated Today</span>
-        </div>
+        {/* Animated Sparkle Icon (Right) */}
+        <Sparkles 
+          size={16} 
+          className="text-[#5E4B4B] group-hover:-rotate-12 transition-transform duration-500 hidden md:block" 
+          fill="currentColor"
+        />
 
       </div>
     </div>

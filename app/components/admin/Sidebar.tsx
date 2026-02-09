@@ -52,7 +52,7 @@ export default function AdminSidebar({ onClose }: AdminSidebarProps) {
     }
   };
 
-  // ✅ FIXED: Added 'as const' to the end of the object
+  //  FIXED: Added 'as const' to the end of the object
   // This tells TS that "easeInOut" and "auto" are specific strict values
   const menuAnimation = {
     closed: { 
@@ -67,7 +67,7 @@ export default function AdminSidebar({ onClose }: AdminSidebarProps) {
     }
   } as const;
 
-  // ✅ FIXED: Added 'as const' here too for strict typing
+  //  FIXED: Added 'as const' here too for strict typing
   const hoverTransition = { type: "spring", stiffness: 400, damping: 17 } as const;
 
   return (
