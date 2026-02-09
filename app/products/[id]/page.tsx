@@ -15,7 +15,9 @@ import {
   Loader2,
   Share2,
   Plus,
-  Minus
+  Minus,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/app/store/cartStore";
@@ -31,7 +33,9 @@ export default function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   
-  // Default 'details' to open so they see info, but neatly
+  // 🔥 NEW: Image carousel state
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
   const [expandedSection, setExpandedSection] = useState<string | null>("details");
 
   const ADMIN_PHONE = "918668679249";
@@ -41,7 +45,6 @@ export default function ProductDetailsPage() {
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const showToast = useUIStore((state) => state.showToast);
 
-  // Check if product is in cart
   const isInCart = product ? cartItems.some(item => item.id === product.id) : false;
 
   useEffect(() => {
@@ -54,6 +57,17 @@ export default function ProductDetailsPage() {
       })
       .catch(() => setLoading(false));
   }, [params.id]);
+
+  // 🔥 Image navigation handlers
+  const images = product?.all_images || [product?.image_url].filter(Boolean) || [];
+  
+  const nextImage = () => {
+    setSelectedImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   const handleAddToCart = async () => {
     if (!session) {
@@ -108,7 +122,6 @@ export default function ProductDetailsPage() {
     window.open(`https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  // Helper to fix the "Wall of Text" issue
   const renderDescription = (text: string) => {
     if (!text) return null;
     return text.split("\n").map((line, index) => (
@@ -118,16 +131,22 @@ export default function ProductDetailsPage() {
     ));
   };
 
-  // Get wishlist status
   const isWishlisted = product ? useWishlistStore.getState().isWishlisted(product.id) : false;
 
-  if (loading) return <div className="h-screen w-full flex items-center justify-center"><Loader2 className="animate-spin text-[var(--color-gold-primary)]" /></div>;
-  if (!product) return <div className="h-screen flex items-center justify-center">Product Not Found</div>;
+  if (loading) return (
+    <div className="h-screen w-full flex items-center justify-center">
+      <Loader2 className="animate-spin text-[var(--color-gold-primary)]" />
+    </div>
+  );
+  
+  if (!product) return (
+    <div className="h-screen flex items-center justify-center">Product Not Found</div>
+  );
 
   return (
     <div className="min-h-screen bg-white pb-32 lg:pb-0">
       
-      {/* 1. CLEAN HEADER */}
+      {/* HEADER */}
       <div className="container mx-auto px-4 py-6 border-b border-gray-50">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-black transition-colors uppercase tracking-widest">
           <ArrowLeft size={14} /> Back to Collection
@@ -137,37 +156,87 @@ export default function ProductDetailsPage() {
       <main className="container mx-auto px-4 lg:px-8 mt-8 mb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          {/* ================= LEFT: PRODUCT IMAGE (STICKY) - Span 7 cols ================= */}
+          {/* ================= LEFT: IMAGE GALLERY (STICKY) ================= */}
           <div className="lg:col-span-5 relative">
-            <div className="sticky top-24">
-              <div className="aspect-square w-full overflow-hidden bg-[#F9F9F9] rounded-sm relative">
-                {product.image_url ? (
-                  <motion.img 
+            <div className="sticky top-24 space-y-4">
+              
+              {/* 🔥 MAIN IMAGE DISPLAY WITH CAROUSEL */}
+              <div className="aspect-square w-full overflow-hidden bg-[#F9F9F9] rounded-sm relative group">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={selectedImageIndex}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    src={product.image_url} 
-                    alt={product.name} 
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    src={images[selectedImageIndex] || "/placeholder.jpg"}
+                    alt={product.name}
                     className="h-full w-full object-cover"
                   />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-gray-300">No Image</div>
+                </AnimatePresence>
+
+                {/* Navigation Arrows (only show if multiple images) */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    >
+                      <ChevronLeft size={20} className="text-gray-900" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    >
+                      <ChevronRight size={20} className="text-gray-900" />
+                    </button>
+
+                    {/* Image Counter */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-xs">
+                      {selectedImageIndex + 1} / {images.length}
+                    </div>
+                  </>
                 )}
 
                 {/* Badges */}
                 <div className="absolute top-6 left-6 flex flex-col gap-2">
                   {product.is_sold_out && (
-                    <span className="bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm">Sold Out</span>
+                    <span className="bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm">
+                      Sold Out
+                    </span>
                   )}
                 </div>
               </div>
+
+              {/* 🔥 THUMBNAIL GALLERY (only show if multiple images) */}
+              {images.length > 1 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`aspect-square rounded-md overflow-hidden border-2 transition-all ${
+                        idx === selectedImageIndex
+                          ? "border-[var(--color-gold-primary)] opacity-100"
+                          : "border-gray-200 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`View ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* ================= RIGHT: DETAILS (SCROLLABLE) - Span 5 cols ================= */}
+          {/* ================= RIGHT: DETAILS (Same as before) ================= */}
           <div className="lg:col-span-5 flex flex-col pt-2">
             
-            {/* 1. Header Info */}
+            {/* Header Info */}
             <div className="border-b border-gray-100 pb-8">
               <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--color-gold-primary)] uppercase">
                 {product.category_name || "Fine Jewellery"}
@@ -187,11 +256,10 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
-            {/* 2. Action Buttons (Desktop) - FIXED */}
+            {/* Action Buttons (Desktop) */}
             <div className="hidden lg:flex flex-col gap-3 py-8">
               <div className="flex gap-3">
                 {isInCart ? (
-                  // Show "View Cart" button when already in cart
                   <button
                     onClick={() => router.push('/cart')}
                     className="flex-1 h-12 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest bg-green-600 text-white hover:bg-green-700 transition-all"
@@ -200,7 +268,6 @@ export default function ProductDetailsPage() {
                     View Cart
                   </button>
                 ) : (
-                  // Show "Add to Cart" when not in cart
                   <button
                     onClick={handleAddToCart}
                     disabled={product.is_sold_out || isAddingToCart}
@@ -231,10 +298,8 @@ export default function ProductDetailsPage() {
               </button>
             </div>
 
-            {/* 3. Organized Details (Accordions) */}
+            {/* Details Accordions */}
             <div className="border-t border-gray-100">
-               
-               {/* Product Description Accordion */}
                <AccordionItem 
                  title="Product Description" 
                  isOpen={expandedSection === 'details'} 
@@ -251,7 +316,6 @@ export default function ProductDetailsPage() {
                   </div>
                </AccordionItem>
 
-               {/* Shipping Accordion */}
                <AccordionItem 
                  title="Shipping & Returns" 
                  isOpen={expandedSection === 'shipping'} 
@@ -263,21 +327,19 @@ export default function ProductDetailsPage() {
                      <p>• <strong>Returns:</strong> 7-day easy return policy if product tag is intact.</p>
                   </div>
                </AccordionItem>
-
             </div>
 
-            {/* 4. Trust Badges (Clean Row) */}
+            {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-2 mt-8 pt-8 border-t border-gray-100">
                <TrustBadge icon={Shield} label="BIS Hallmarked" />
                <TrustBadge icon={Truck} label="Insured Shipping" />
                <TrustBadge icon={RotateCcw} label="Easy Returns" />
             </div>
-
           </div>
         </div>
       </main>
 
-      {/* ================= MOBILE STICKY BAR - FIXED ================= */}
+      {/* MOBILE STICKY BAR */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 lg:hidden z-50 flex gap-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <button 
           onClick={handleEnquire}
@@ -308,8 +370,7 @@ export default function ProductDetailsPage() {
   );
 }
 
-// --- HELPER COMPONENTS ---
-
+// Helper Components
 function AccordionItem({ title, isOpen, onClick, children }: any) {
   return (
     <div className="border-b border-gray-100">
