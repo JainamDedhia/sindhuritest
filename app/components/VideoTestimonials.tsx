@@ -1,65 +1,108 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Play, Star, Volume2, VolumeX } from "lucide-react";
+import { Play, Star } from "lucide-react";
 
-// 🔥 UPDATED: Now using YouTube video IDs instead of local files
+// 🔥 YouTube Video Reviews
 const VIDEO_REVIEWS = [
   {
     id: 1,
     customer: "Meera & Rohan",
     location: "Wedding, Udaipur",
-    youtubeId: "Awki2C9V0Xk", // 🔥 Your video ID
+    youtubeId: "Awki2C9V0Xk",
     quote: "The bridal set was the highlight of my look.",
   },
   {
     id: 2,
     customer: "Sanya Malhotra",
     location: "Festive Edit",
-    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID when you have more
+    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID
     quote: "Obsessed with the detailing on these bangles!",
   },
   {
     id: 3,
     customer: "Ishita Raj",
     location: "Engagement",
-    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID when you have more
+    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID
     quote: "Found the perfect diamond ring here.",
   },
   {
     id: 4,
     customer: "Aarav & Family",
     location: "Gifting",
-    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID when you have more
+    youtubeId: "Awki2C9V0Xk", // Replace with actual video ID
     quote: "The best gold purity and service in town.",
   },
 ];
 
-// --- VIDEO CARD WITH YOUTUBE EMBED ---
+// --- VIDEO CARD WITH AUTOPLAY & NO BRANDING ---
 function VideoCard({ review }: { review: any }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
 
-  // Build YouTube embed URL
-  const embedUrl = `https://www.youtube.com/embed/${review.youtubeId}?autoplay=0&mute=1&controls=1&modestbranding=1&rel=0&enablejsapi=1`;
+  // 🔥 AGGRESSIVE YOUTUBE EMBED PARAMETERS TO HIDE EVERYTHING
+  const embedUrl = `https://www.youtube.com/embed/${review.youtubeId}?` + new URLSearchParams({
+    autoplay: '1',           // Autoplay when in view
+    mute: '1',               // Must be muted for autoplay to work
+    loop: '1',               // Loop the video
+    playlist: review.youtubeId, // Required for loop to work
+    controls: '0',           // Hide controls
+    showinfo: '0',           // Hide title
+    modestbranding: '1',     // Minimal YouTube logo
+    rel: '0',                // Don't show related videos
+    fs: '0',                 // No fullscreen button
+    cc_load_policy: '0',     // No captions
+    iv_load_policy: '3',     // Hide annotations
+    disablekb: '1',          // Disable keyboard controls
+    playsinline: '1',        // Play inline on mobile
+  }).toString();
+
+  // Intersection Observer to autoplay only when visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting && entry.intersectionRatio >= 0.5);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group cursor-pointer snap-center rounded-2xl overflow-hidden shadow-md bg-gray-100 transform transition-transform duration-500">
+    <div 
+      ref={containerRef}
+      className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group cursor-pointer snap-center rounded-2xl overflow-hidden shadow-lg bg-black transform transition-transform duration-500 hover:scale-[1.02]"
+    >
       
-      {/* YOUTUBE IFRAME */}
-      <iframe
-        ref={iframeRef}
-        src={embedUrl}
-        className="absolute inset-0 w-full h-full object-cover"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        loading="lazy"
-      />
+      {/* YOUTUBE IFRAME - FULLY CUSTOMIZED */}
+      {isInView && (
+        <iframe
+          src={embedUrl}
+          className="absolute inset-0 w-full h-full pointer-events-auto"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          style={{
+            border: 'none',
+            // 🔥 HIDE YOUTUBE LOGO WITH CSS
+            pointerEvents: 'auto',
+          }}
+        />
+      )}
 
-      {/* Dark Overlay - Only shows when NOT playing */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-500 pointer-events-none ${isPlaying ? 'opacity-0' : 'opacity-60'}`} />
+      {/* 🔥 OVERLAY TO HIDE YOUTUBE BRANDING AT BOTTOM */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
 
-      {/* Bottom Info */}
+      {/* Customer Info Overlay */}
       <div className="absolute bottom-0 left-0 w-full p-6 z-20 pointer-events-none">
         <div className="flex gap-1 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -67,7 +110,7 @@ function VideoCard({ review }: { review: any }) {
           ))}
         </div>
 
-        <h3 className="text-xl font-serif text-white leading-snug mb-1 drop-shadow-md">
+        <h3 className="text-xl font-serif text-white leading-snug mb-1 drop-shadow-lg">
           {review.customer}
         </h3>
         
@@ -75,15 +118,19 @@ function VideoCard({ review }: { review: any }) {
           {review.location}
         </p>
 
-        <p className="text-xs text-white/90 font-medium line-clamp-2 leading-relaxed opacity-100">
+        <p className="text-xs text-white/90 font-medium line-clamp-2 leading-relaxed">
           "{review.quote}"
         </p>
       </div>
+
+      {/* 🔥 TOP GRADIENT TO HIDE ANY YOUTUBE UI */}
+      <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-10" />
+      
     </div>
   );
 }
 
-// --- MAIN PARENT COMPONENT ---
+// --- MAIN COMPONENT ---
 export default function VideoTestimonials() {
   return (
     <section className="py-16 md:py-28 bg-white border-t border-gray-50 relative">
@@ -98,11 +145,10 @@ export default function VideoTestimonials() {
         </h2>
       </div>
 
-      {/* Video Scroll Container */}
+      {/* Video Grid */}
       <div className="container mx-auto px-0 md:px-6 max-w-[1400px]">
         
-        {/* Scroll Track: Enabled Snap Scrolling for Mobile */}
-        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible px-6 md:px-0 pb-10 snap-x snap-mandatory no-scrollbar">
+        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible px-6 md:px-0 pb-10 snap-x snap-mandatory scrollbar-hide">
           {VIDEO_REVIEWS.map((review) => (
             <VideoCard key={review.id} review={review} />
           ))}

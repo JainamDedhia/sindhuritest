@@ -238,3 +238,25 @@ select:disabled {
 .duration-300 {
   animation-duration: 300ms;
 }
+/* Add this to the END of your app/globals.css file */
+
+/* ===============================
+   HIDE SCROLLBAR (for video carousel)
+================================ */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Prevent text selection on video cards */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
