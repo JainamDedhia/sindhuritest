@@ -78,26 +78,29 @@ function VideoCard({ review }: { review: any }) {
       className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group snap-center rounded-2xl overflow-hidden shadow-lg bg-black"
     >
       
-      {/* YOUTUBE IFRAME - pointer-events: none prevents ALL interactions */}
+      {/* YOUTUBE IFRAME - Layer 1 (bottom) */}
       {isInView && (
         <iframe
           src={embedUrl}
-          className="absolute inset-0 w-full h-full pointer-events-none"
+          className="absolute inset-0 w-full h-full z-10"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
-          style={{ border: 'none' }}
+          style={{ border: 'none', pointerEvents: 'none' }}
         />
       )}
 
-      {/* 🔥 INVISIBLE SHIELD - Blocks ALL mouse events from reaching YouTube iframe */}
-      <div className="absolute inset-0 z-30 pointer-events-auto cursor-default" />
+      {/* 🔥 INVISIBLE INTERACTION BLOCKER - Layer 2 (blocks YouTube UI) */}
+      <div 
+        className="absolute inset-0 z-20" 
+        style={{ pointerEvents: 'auto', cursor: 'default' }}
+      />
 
-      {/* Visual Gradients for Aesthetic */}
-      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
-      <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black via-black/85 to-transparent pointer-events-none z-20" />
+      {/* Visual Gradients - Layer 3 (aesthetic) */}
+      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-30 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black via-black/85 to-transparent z-30 pointer-events-none" />
 
-      {/* Customer Info Overlay */}
+      {/* Customer Info Overlay - Layer 4 (top) */}
       <div className="absolute bottom-0 left-0 w-full p-6 z-40 pointer-events-none select-none">
         <div className="flex gap-1 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
