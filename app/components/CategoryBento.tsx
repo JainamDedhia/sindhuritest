@@ -34,7 +34,7 @@ export default function CategoryBento() {
         <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-[#C8A45D] block mb-3 opacity-90">
           Our Collections
         </span>
-        <h2 className="font-serif text-3xl md:text-5xl bg-gradient-to-r from-[#C8A45D] to-[#F3D6D1] bg-clip-text text-transparent pb-1">
+        <h2 className="font-serif text-3xl md:text-5xl bg-gradient-to-r from-[#e60b09] to-[#000000] via-[#ffbb00] bg-clip-text text-transparent pb-1">
           Shop by Category
         </h2>
       </div>

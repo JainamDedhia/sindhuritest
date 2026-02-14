@@ -30,7 +30,7 @@ export default function FeaturedBento() {
         <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-[#C8A45D] mb-3">
           <Star size={10} fill="currentColor" /> Handpicked Favorites
         </span>
-        <h2 className="font-serif text-4xl md:text-6xl leading-tight pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#1a1a1a] via-[#4a3f35] to-[#D48C95]">
+        <h2 className="font-serif text-4xl md:text-6xl leading-tight pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#0e0725] via-[#e60b09] via-[#e9d022] to-[#0e0725] ">
           Curated Gifting Edits
         </h2>
       </div>

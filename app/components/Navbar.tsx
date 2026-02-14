@@ -57,13 +57,16 @@ export default function Navbar() {
         </div>
 
         {/* ================= LOGO ================= */}
-        <div className="flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+        <div className="flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 ">
             <Link href="/" className="block">
               <img
                  
                 src="/assets/Sinduri_Logo.PNG" 
-                alt="Sinduri" 
-                className="h-15 w-auto object-contain hover:opacity-90 transition-opacity "
+                alt="Sinduri"
+                height={10} 
+                width={100}
+
+                className="object-contain hover:opacity-90 transition-opacity mt-5 mb-2"
               />
             </Link>
         </div>
@@ -93,7 +96,7 @@ export default function Navbar() {
             {/* DESKTOP SEARCH BAR (Icon on Right) */}
             <form 
               //  onSubmit={handleSearch} 
-              //  className="hidden md:block relative group w-100%"
+                className="hidden md:block relative group w-100%"
             >
                <input 
                  type="text"
@@ -189,7 +192,7 @@ export default function Navbar() {
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
           {/* MOBILE SEARCH (UPDATED: Icon on Right) */}
-          <form onSubmit={handleSearch} className="relative mb-2">
+          <form onSubmit={handleSearch} className="relative mb-2 ">
             <input
               type="text"
               placeholder="Search products..."
