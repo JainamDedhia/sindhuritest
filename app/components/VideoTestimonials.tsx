@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
 import { Play, Star } from "lucide-react";
 
 const VIDEO_REVIEWS = [
@@ -35,72 +34,37 @@ const VIDEO_REVIEWS = [
 ];
 
 function VideoCard({ review }: { review: any }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  const embedUrl = `https://www.youtube.com/embed/${review.youtubeId}?` + new URLSearchParams({
-    autoplay: '1',
-    mute: '1',
-    loop: '1',
-    playlist: review.youtubeId,
-    controls: '0',
-    modestbranding: '1',
-    rel: '0',
-    fs: '0',
-    cc_load_policy: '0',
-    iv_load_policy: '3',
-    disablekb: '1',
-    playsinline: '1',
-  }).toString();
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting && entry.intersectionRatio >= 0.5);
-      },
-      { threshold: 0.5 }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
-      }
-    };
-  }, []);
+  // 🔥 IMMEDIATE AUTOPLAY - no intersection observer needed
+  const embedUrl = `https://www.youtube.com/embed/${review.youtubeId}?autoplay=1&mute=1&loop=1&playlist=${review.youtubeId}&controls=0&modestbranding=1&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1`;
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group snap-center rounded-2xl overflow-hidden shadow-lg bg-black"
-    >
+    <div className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group snap-center rounded-2xl overflow-hidden shadow-lg bg-black">
       
-      {/* YOUTUBE IFRAME - Layer 1 (bottom) */}
-      {isInView && (
-        <iframe
-          src={embedUrl}
-          className="absolute inset-0 w-full h-full z-10"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          loading="lazy"
-          style={{ border: 'none', pointerEvents: 'none' }}
-        />
-      )}
+      {/* 🔥 YOUTUBE IFRAME - Loads immediately, no conditions */}
+      <iframe
+        src={embedUrl}
+        className="absolute inset-0 w-full h-full z-10"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        loading="eager"
+        style={{ 
+          border: 'none', 
+          pointerEvents: 'none'
+        }}
+        title={`Video review from ${review.customer}`}
+      />
 
-      {/* 🔥 INVISIBLE INTERACTION BLOCKER - Layer 2 (blocks YouTube UI) */}
+      {/* Invisible Interaction Blocker - Prevents YouTube UI from showing */}
       <div 
         className="absolute inset-0 z-20" 
         style={{ pointerEvents: 'auto', cursor: 'default' }}
       />
 
-      {/* Visual Gradients - Layer 3 (aesthetic) */}
+      {/* Visual Gradients */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-30 pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black via-black/85 to-transparent z-30 pointer-events-none" />
 
-      {/* Customer Info Overlay - Layer 4 (top) */}
+      {/* Customer Info Overlay */}
       <div className="absolute bottom-0 left-0 w-full p-6 z-40 pointer-events-none select-none">
         <div className="flex gap-1 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
