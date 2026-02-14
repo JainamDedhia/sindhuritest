@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import ProductCard from "@/app/components/ProductCard";
 import ProductCardSkeleton from "@/app/components/ProductCardSkeleton";
 import { X, SlidersHorizontal, Search, Check, Trash2, Tag } from "lucide-react";
+import { useSearchParams } from 'next/navigation';
 
 interface ApiProduct {
   id: number;
@@ -25,6 +26,7 @@ function ProductContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
   
   // FILTER STATE
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -53,6 +55,14 @@ function ProductContent() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      const decodedCategory = decodeURIComponent(categoryFromUrl);
+      setSelectedCategories([decodedCategory]);
+    }
+  }, [searchParams]);
+  
   const toggleCategory = (categoryName: string) => {
     setSelectedCategories(prev => 
       prev.includes(categoryName)

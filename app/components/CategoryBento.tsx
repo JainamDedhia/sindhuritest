@@ -16,6 +16,13 @@ export default function CategoryBento() {
 
   if (items.length === 0) return null;
 
+  // 🔥 HELPER FUNCTION TO BUILD FILTER URL
+  const getCategoryFilterUrl = (categoryTitle: string) => {
+    // Convert title to lowercase and URL encode
+    const categoryName = encodeURIComponent(categoryTitle);
+    return `/products?category=${categoryName}`;
+  };
+
   // Helper for Desktop Grid
   const getDesktopSizeClass = (size: string) => {
     switch(size) {
@@ -44,7 +51,7 @@ export default function CategoryBento() {
         {items.map((item) => (
           <Link
             key={item.id}
-            href={item.target_link}
+            href={getCategoryFilterUrl(item.title)} // 🔥 FIXED: Use filter URL
             className={`group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm hover:shadow-2xl transition-all duration-700 ${getDesktopSizeClass(item.size)}`}
           >
             <div className="absolute inset-0 transition-transform duration-1000 ease-out group-hover:scale-105">
@@ -52,7 +59,6 @@ export default function CategoryBento() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
             </div>
             
-            {/* Desktop Content */}
             <div className="absolute bottom-0 left-0 w-full p-8 z-10">
                <div className="flex items-end justify-between translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                   <div className="text-left">
@@ -68,21 +74,16 @@ export default function CategoryBento() {
         ))}
       </div>
 
-      {/* ================= MOBILE VIEW (Refined & Centered) ================= */}
+      {/* ================= MOBILE VIEW ================= */}
       <div className="lg:hidden px-5 flex flex-col gap-5">
         
-        {/* 1. HERO CARD */}
         {items.length > 0 && (
           <Link 
-             href={items[0].target_link}
+             href={getCategoryFilterUrl(items[0].title)} // 🔥 FIXED
              className="relative w-full aspect-[4/5] max-h-[55vh] rounded-[20px] overflow-hidden shadow-md group"
           >
              <img src={items[0].image_url} alt={items[0].title} className="h-full w-full object-cover" />
-             
-             {/* Stronger Bottom Gradient for Text Contrast */}
              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-             
-             {/* Center Aligned Content */}
              <div className="absolute bottom-8 inset-x-0 text-center z-10 px-4">
                 <h3 className="text-3xl font-serif text-white tracking-wide drop-shadow-md">
                   {items[0].title}
@@ -92,21 +93,16 @@ export default function CategoryBento() {
           </Link>
         )}
 
-        {/* 2. SECONDARY GRID */}
         {items.length > 1 && (
           <div className="grid grid-cols-2 gap-4">
              {items.slice(1).map((item) => (
                <Link
                  key={item.id}
-                 href={item.target_link}
+                 href={getCategoryFilterUrl(item.title)} // 🔥 FIXED
                  className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm bg-gray-50"
                >
                  <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
-                 
-                 {/* Gradient Fade */}
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
-                 
-                 {/* Center Aligned Text */}
                  <div className="absolute bottom-5 inset-x-0 text-center px-2">
                     <h3 className="text-xl font-serif text-white tracking-wide drop-shadow-sm leading-tight">
                       {item.title}
@@ -117,7 +113,6 @@ export default function CategoryBento() {
           </div>
         )}
 
-        {/* 3. GLOBAL CTA */}
         <div className="mt-6 text-center pb-8 border-b border-gray-100">
            <Link 
              href="/products" 

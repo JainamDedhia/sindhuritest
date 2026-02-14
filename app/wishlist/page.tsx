@@ -1,4 +1,4 @@
-// app/wishlist/page.tsx
+// app/wishlist/page.tsx - FIXED VERSION
 "use client";
 
 import Link from "next/link";
@@ -23,18 +23,11 @@ export default function WishlistPage() {
 
   // 🔥 CLIENT-SIDE AUTH CHECK
   useEffect(() => {
-    console.log("🔐 Wishlist page - Auth status:", status);
-    
-    if (status === "loading") {
-      console.log("⏳ Waiting for session...");
-      return;
-    }
+    if (status === "loading") return;
     
     if (status === "unauthenticated") {
-      console.log("❌ Not authenticated, redirecting to login");
       router.replace("/auth/login?callbackUrl=/wishlist");
     } else if (status === "authenticated") {
-      console.log("✅ Authenticated, loading wishlist");
       const refreshWishlist = async () => {
         setIsRefreshing(true);
         await forceRefresh();
@@ -62,18 +55,12 @@ export default function WishlistPage() {
     );
   }
 
-  // 🔥 SHOW NOTHING WHILE REDIRECTING
-  if (status === "unauthenticated") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
-          <p className="text-sm text-gray-500">Redirecting to login...</p>
-        </div>
-      </div>
-    );
+  // 🔥 CRITICAL FIX: RETURN NULL IF NOT AUTHENTICATED
+  if (status === "unauthenticated" || !session?.user) {
+    return null;
   }
 
+  // 🔥 ONLY RENDER WISHLIST IF AUTHENTICATED
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
       
@@ -81,16 +68,14 @@ export default function WishlistPage() {
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Wishlist ({items.length})</h1>
         
-        {session?.user && (
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        )}
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+        >
+          <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+          Refresh
+        </button>
       </div>
 
       {items.length === 0 ? (

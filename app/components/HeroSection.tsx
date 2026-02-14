@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { ChevronRight, ChevronLeft, Pause, Play } from "lucide-react";
 import MobileStackCarousel from "./MobileStackCarousel";
+import { optimizeCloudinaryUrl } from '@/lib/imageOptimizer';
 
 type Banner = {
   id: string;

@@ -211,7 +211,7 @@ export default function ProductDetailsPage() {
               {/* 🔥 THUMBNAIL GALLERY (only show if multiple images) */}
               {images.length > 1 && (
                 <div className="grid grid-cols-5 gap-2">
-                  {images.map((img, idx) => (
+                  {images.map((img: string, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}

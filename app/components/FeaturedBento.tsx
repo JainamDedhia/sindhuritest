@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 
+// 🔥 HELPER TO BUILD FILTER URL
+const getCategoryFilterUrl = (title: string) => {
+  const categoryName = encodeURIComponent(title);
+  return `/products?category=${categoryName}`;
+};
+
 export default function FeaturedBento() {
   const [items, setItems] = useState<any[]>([]);
 
@@ -25,7 +31,7 @@ export default function FeaturedBento() {
   return (
     <section className="py-12 md:py-20 bg-[#FDFBF7] relative">
       
-      {/* HEADER: Centered & Gradient Text */}
+      {/* HEADER */}
       <div className="container mx-auto px-5 mb-10 text-center">
         <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-[#C8A45D] mb-3">
           <Star size={10} fill="currentColor" /> Handpicked Favorites
@@ -35,21 +41,19 @@ export default function FeaturedBento() {
         </h2>
       </div>
 
-      {/* ================= COMPACT BENTO GRID ================= */}
+      {/* BENTO GRID */}
       <div className="container mx-auto max-w-[1100px] px-5">
         
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 h-auto lg:h-[480px]">
           
-          {/* 1. HERO CARD (Deep Ruby Burgundy Gradient) */}
+          {/* 🔥 CARD 1 - HERO (FIXED) */}
           {items[0] && (
             <Link
-              href={items[0].target_link}
+              href={getCategoryFilterUrl(items[0].title)} // 🔥 FIXED
               className="group relative col-span-2 rounded-xl overflow-hidden cursor-pointer h-[320px] lg:h-full shadow-sm hover:shadow-2xl transition-all duration-700"
             >
               <div className="absolute inset-0 transition-transform duration-1000 ease-out group-hover:scale-105">
                 <img src={items[0].image_url} alt={items[0].title} className="h-full w-full object-cover" />
-                
-                {/* ✨ COLOR: Deep Ruby Burgundy Fade */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#2A0A0A] via-[#2A0A0A]/60 to-transparent opacity-95" />
               </div>
 
@@ -67,19 +71,17 @@ export default function FeaturedBento() {
             </Link>
           )}
 
-          {/* 2. SECONDARY CARDS */}
+          {/* SECONDARY CARDS */}
           <div className="col-span-2 lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-3 md:gap-5 h-auto lg:h-full">
             
-            {/* Card 2 (Deep Forest Emerald Gradient) */}
+            {/* 🔥 CARD 2 (FIXED) */}
             {items[1] && (
               <Link
-                href={items[1].target_link}
+                href={getCategoryFilterUrl(items[1].title)} // 🔥 FIXED
                 className="group relative w-full h-[200px] lg:h-full rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
               >
                 <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
                   <img src={items[1].image_url} alt={items[1].title} className="h-full w-full object-cover" />
-                  
-                  {/* ✨ COLOR: Deep Forest Emerald Fade */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#660707] via-[#062C1D]/50 to-transparent opacity-90" />
                 </div>
                 
@@ -91,16 +93,14 @@ export default function FeaturedBento() {
               </Link>
             )}
 
-            {/* Card 3 (Deep Royal Indigo Gradient) */}
+            {/* 🔥 CARD 3 (FIXED) */}
             {items[2] && (
               <Link
-                href={items[2].target_link}
+                href={getCategoryFilterUrl(items[2].title)} // 🔥 FIXED
                 className="group relative w-full h-[200px] lg:h-full rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
               >
                 <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
                   <img src={items[2].image_url} alt={items[2].title} className="h-full w-full object-cover" />
-                  
-                  {/* ✨ COLOR: Deep Royal Indigo Fade */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#660707] via-[#120F2D]/50 to-transparent opacity-90" />
                 </div>
                 
@@ -116,7 +116,7 @@ export default function FeaturedBento() {
         </div>
       </div>
 
-      {/* Simple Footer Link */}
+      {/* Footer Link */}
       <div className="text-center mt-10 md:mt-12">
         <Link href="/products" className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#5E4B4B] hover:text-black transition-colors opacity-70 hover:opacity-100">
            View All Collections <ArrowRight size={12} />

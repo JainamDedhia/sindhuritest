@@ -8,6 +8,7 @@ import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useUIStore } from "@/app/store/uiStore";
 import { useState } from "react";
+import { optimizeCloudinaryUrl } from '@/lib/imageOptimizer';
 
 interface ProductProps {
   id: number | string;
@@ -102,6 +103,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
             alt={product.title}
             className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
         </Link>
 
