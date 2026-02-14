@@ -12,7 +12,7 @@ import { useWishlistStore } from "@/app/store/wishlistStore";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // 🔥 GET AUTH STATUS
   const router = useRouter();
   const pathname = usePathname();
   
@@ -41,6 +41,9 @@ export default function Navbar() {
      await signOut();
   };
 
+  // 🔥 CHECK IF USER IS AUTHENTICATED
+  const isAuthenticated = status === "authenticated";
+
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
       
@@ -60,12 +63,10 @@ export default function Navbar() {
         <div className="flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 ">
             <Link href="/" className="block">
               <img
-                 
                 src="/assets/Sinduri_Logo.PNG" 
                 alt="Sinduri"
                 height={10} 
                 width={100}
-
                 className="object-contain hover:opacity-90 transition-opacity mt-5 mb-2"
               />
             </Link>
@@ -93,9 +94,9 @@ export default function Navbar() {
         {/* ================= RIGHT ACTIONS ================= */}
         <div className="flex items-center gap-3 md:gap-6">
             
-            {/* DESKTOP SEARCH BAR (Icon on Right) */}
+            {/* DESKTOP SEARCH BAR */}
             <form 
-              //  onSubmit={handleSearch} 
+                onSubmit={handleSearch} 
                 className="hidden md:block relative group w-100%"
             >
                <input 
@@ -115,20 +116,20 @@ export default function Navbar() {
 
             <div className="flex items-center gap-4 md:border-l md:border-gray-200 md:pl-6 h-6">
                 
-                {/* WISHLIST */}
+                {/* 🔥 WISHLIST - ONLY SHOW BADGE WHEN AUTHENTICATED */}
                 <Link href="/wishlist" className="relative group text-gray-500 hover:text-black transition-colors hidden md:block">
                   <Heart size={20} className="group-hover:scale-105 transition-transform" />
-                  {mounted && wishlistCount > 0 && (
+                  {mounted && isAuthenticated && wishlistCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full">
                       {wishlistCount}
                     </span>
                   )}
                 </Link>
 
-                {/* CART */}
+                {/* 🔥 CART - ONLY SHOW BADGE WHEN AUTHENTICATED */}
                 <Link href="/cart" className="relative group text-gray-500 hover:text-black transition-colors">
                   <ShoppingBag size={20} className="group-hover:scale-105 transition-transform" />
-                  {mounted && cartCount > 0 && (
+                  {mounted && isAuthenticated && cartCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-[var(--color-gold-primary)] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
                       {cartCount}
                     </span>
@@ -191,7 +192,7 @@ export default function Navbar() {
       >
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
-          {/* MOBILE SEARCH (UPDATED: Icon on Right) */}
+          {/* MOBILE SEARCH */}
           <form onSubmit={handleSearch} className="relative mb-2 ">
             <input
               type="text"
@@ -216,6 +217,7 @@ export default function Navbar() {
             <ShoppingBag size={18} /> Shop Collection
           </Link>
           
+          {/* 🔥 MOBILE WISHLIST - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/wishlist"
             className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
@@ -224,13 +226,14 @@ export default function Navbar() {
             <span className="flex items-center gap-3">
               <Heart size={18} /> My Wishlist
             </span>
-            {mounted && wishlistCount > 0 && (
+            {mounted && isAuthenticated && wishlistCount > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {wishlistCount}
               </span>
             )}
           </Link>
 
+          {/* 🔥 MOBILE CART - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/cart"
             className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
@@ -239,7 +242,7 @@ export default function Navbar() {
             <span className="flex items-center gap-3">
               <ShoppingBag size={18} /> My Cart
             </span>
-            {mounted && cartCount > 0 && (
+            {mounted && isAuthenticated && cartCount > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
                 {cartCount}
               </span>
