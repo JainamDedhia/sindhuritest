@@ -1,8 +1,14 @@
 "use client";
 
+/**
+ * CategoryBento.tsx — with Cloudinary image optimization
+ */
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import OptimizedImage from "./OptimizedImage";
+import { getBentoTile } from "@/lib/imageOptimizer";
 
 export default function CategoryBento() {
   const [items, setItems] = useState<any[]>([]);
@@ -16,14 +22,10 @@ export default function CategoryBento() {
 
   if (items.length === 0) return null;
 
-  // 🔥 HELPER FUNCTION TO BUILD FILTER URL
   const getCategoryFilterUrl = (categoryTitle: string) => {
-    // Convert title to lowercase and URL encode
-    const categoryName = encodeURIComponent(categoryTitle);
-    return `/products?category=${categoryName}`;
+    return `/products?category=${encodeURIComponent(categoryTitle)}`;
   };
 
-  // Helper for Desktop Grid
   const getDesktopSizeClass = (size: string) => {
     switch(size) {
       case 'large': return "col-span-2 row-span-2";
@@ -36,7 +38,6 @@ export default function CategoryBento() {
   return (
     <section className="py-12 md:py-24 bg-white relative">
       
-      {/* HEADER SECTION */}
       <div className="text-center max-w-2xl mx-auto mb-10 md:mb-16 px-6">
         <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-[#C8A45D] block mb-3 opacity-90">
           Our Collections
@@ -46,16 +47,26 @@ export default function CategoryBento() {
         </h2>
       </div>
 
-      {/* ================= DESKTOP VIEW (Grid) ================= */}
+      {/* DESKTOP VIEW */}
       <div className="hidden lg:grid container mx-auto max-w-[1400px] px-8 grid-cols-4 gap-6 auto-rows-[300px]">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <Link
             key={item.id}
-            href={getCategoryFilterUrl(item.title)} // 🔥 FIXED: Use filter URL
+            href={getCategoryFilterUrl(item.title)}
             className={`group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm hover:shadow-2xl transition-all duration-700 ${getDesktopSizeClass(item.size)}`}
           >
+            {/* 🔥 OPTIMIZED: First item loads eagerly (above fold), rest lazy */}
             <div className="absolute inset-0 transition-transform duration-1000 ease-out group-hover:scale-105">
-              <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
+              <OptimizedImage
+                src={item.image_url}
+                alt={item.title}
+                priority={index === 0}
+                width={600}
+                height={600}
+                quality={80}
+                showBlur={true}
+                sizes="(max-width: 1024px) 50vw, 25vw"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
             </div>
             
@@ -74,15 +85,23 @@ export default function CategoryBento() {
         ))}
       </div>
 
-      {/* ================= MOBILE VIEW ================= */}
+      {/* MOBILE VIEW */}
       <div className="lg:hidden px-5 flex flex-col gap-5">
         
         {items.length > 0 && (
           <Link 
-             href={getCategoryFilterUrl(items[0].title)} // 🔥 FIXED
+             href={getCategoryFilterUrl(items[0].title)}
              className="relative w-full aspect-[4/5] max-h-[55vh] rounded-[20px] overflow-hidden shadow-md group"
           >
-             <img src={items[0].image_url} alt={items[0].title} className="h-full w-full object-cover" />
+             <OptimizedImage
+               src={items[0].image_url}
+               alt={items[0].title}
+               priority={true}
+               width={768}
+               height={960}
+               quality={82}
+               showBlur={true}
+             />
              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
              <div className="absolute bottom-8 inset-x-0 text-center z-10 px-4">
                 <h3 className="text-3xl font-serif text-white tracking-wide drop-shadow-md">
@@ -98,10 +117,18 @@ export default function CategoryBento() {
              {items.slice(1).map((item) => (
                <Link
                  key={item.id}
-                 href={getCategoryFilterUrl(item.title)} // 🔥 FIXED
+                 href={getCategoryFilterUrl(item.title)}
                  className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm bg-gray-50"
                >
-                 <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
+                 <OptimizedImage
+                   src={item.image_url}
+                   alt={item.title}
+                   width={300}
+                   height={400}
+                   quality={75}
+                   showBlur={true}
+                   sizes="(max-width: 640px) 50vw, 25vw"
+                 />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
                  <div className="absolute bottom-5 inset-x-0 text-center px-2">
                     <h3 className="text-xl font-serif text-white tracking-wide drop-shadow-sm leading-tight">

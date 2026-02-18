@@ -8,6 +8,8 @@ import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useUIStore } from "@/app/store/uiStore";
 import { useState } from "react";
+import OptimizedImage from "@/app/components/OptimizedImage";
+import { getProductThumbnail } from "@/lib/imageOptimizer";
 
 interface ProductProps {
   id: number | string;
@@ -117,24 +119,29 @@ export default function ProductCard({ product }: { product: ProductProps }) {
       {/* IMAGE AREA */}
       <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F3F0]">
         <Link href={`/products/${product.id}`} className="block w-full h-full">
-          <img
+          {/* 🔥 OPTIMIZED: Uses blur-up + lazy loading + Cloudinary compression */}
+          <OptimizedImage
             src={product.image}
             alt={product.title}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
+            className="transition-transform duration-700 ease-out group-hover:scale-105"
+            width={400}
+            height={500}
+            quality={78}
+            showBlur={true}
+            fallback="https://placehold.co/400x500/f3f4f6/9ca3af?text=Jewellery"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         </Link>
 
         {/* Weight Badge - shows on hover */}
-        <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+        <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 z-10">
           <Scale size={10} />
           {product.weight}g
         </div>
 
         {/* Stock Badge */}
         {!product.inStock && (
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] flex items-start p-3">
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] flex items-start p-3 z-10">
             <span className="bg-gray-900/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">
               Sold Out
             </span>
@@ -144,7 +151,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         {/* Wishlist Button */}
         <button 
           onClick={handleToggleWishlist}
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-white hover:shadow-md hover:scale-110"
+          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-white hover:shadow-md hover:scale-110 z-10"
         >
           <Heart 
             size={16} 

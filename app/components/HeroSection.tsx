@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Pause, Play } from "lucide-react";
 import MobileStackCarousel from "./MobileStackCarousel";
-import { optimizeCloudinaryUrl } from '@/lib/imageOptimizer';
+import { getHeroBanner, getMobileBanner } from '@/lib/imageOptimizer';
 
 type Banner = {
   id: string;
@@ -24,8 +24,15 @@ export default function HeroSection() {
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) return;
-        setDesktopBanners(data.filter((b) => b.device_type === "desktop"));
-        setMobileBanners(data.filter((b) => b.device_type === "mobile"));
+        // 🔥 Pre-optimize all banner URLs at fetch time
+        const processed = data.map((b: Banner) => ({
+          ...b,
+          image_url: b.device_type === "desktop"
+            ? getHeroBanner(b.image_url)
+            : getMobileBanner(b.image_url),
+        }));
+        setDesktopBanners(processed.filter((b) => b.device_type === "desktop"));
+        setMobileBanners(processed.filter((b) => b.device_type === "mobile"));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -47,7 +54,6 @@ export default function HeroSection() {
       </div>
 
       {/* ================= MOBILE (Stack Carousel) ================= */}
-      {/* Optimized height for mobile stack */}
       <div className="block md:hidden h-[60vh] min-h-[500px] relative overflow-hidden bg-[#FAFAFA]">
         {mobileBanners.length > 0 ? (
           <MobileStackCarousel banners={mobileBanners} />
@@ -62,16 +68,11 @@ export default function HeroSection() {
   );
 }
 
-/* =========================================================================
-   1. MOBILE COMPONENT: STACK CAROUSEL (Original Code)
-   ========================================================================= */
-
-/* =========================================================================
-   2. DESKTOP COMPONENT: LUXURY PARALLAX SLIDER
-   ========================================================================= */
 function LuxurySlider({ banners }: { banners: Banner[] }) {
   const [[page, direction], setPage] = useState([0, 0]);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  // 🔥 Track which images have been preloaded
+  const [preloaded, setPreloaded] = useState<Set<number>>(new Set([0]));
 
   const imageIndex = Math.abs(page % banners.length);
   const currentBanner = banners[imageIndex];
@@ -85,6 +86,16 @@ function LuxurySlider({ banners }: { banners: Banner[] }) {
     const timer = setInterval(() => paginate(1), 6000);
     return () => clearInterval(timer);
   }, [page, isAutoPlaying, paginate]);
+
+  // 🔥 Preload next image when current slide changes
+  useEffect(() => {
+    const nextIndex = (imageIndex + 1) % banners.length;
+    if (!preloaded.has(nextIndex)) {
+      const img = new Image();
+      img.src = banners[nextIndex].image_url;
+      img.onload = () => setPreloaded(prev => new Set([...prev, nextIndex]));
+    }
+  }, [imageIndex, banners, preloaded]);
 
   const variants = {
     enter: (direction: number) => ({ x: direction > 0 ? "100%" : "-100%", opacity: 1 }),
@@ -112,6 +123,10 @@ function LuxurySlider({ banners }: { banners: Banner[] }) {
             src={currentBanner.image_url}
             alt={currentBanner.title || "Banner"}
             className="w-full h-full object-cover"
+            // 🔥 First banner loads eagerly, rest lazily
+            loading={imageIndex === 0 ? "eager" : "lazy"}
+            fetchPriority={imageIndex === 0 ? "high" : "auto"}
+            decoding="async"
             draggable={false}
           />
           {(currentBanner.title || currentBanner.subtitle) && (
@@ -122,7 +137,7 @@ function LuxurySlider({ banners }: { banners: Banner[] }) {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-sm font-medium tracking-[0.3em] uppercase mb-3 text-gold-200"
+                  className="text-sm font-medium tracking-[0.3em] uppercase mb-3"
                 >
                   {currentBanner.subtitle}
                 </motion.p>
