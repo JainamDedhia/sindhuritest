@@ -51,7 +51,7 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full py-6">
-      <div className="relative flex items-center justify-center h-[450px] w-full">
+      <div className="relative flex items-center justify-center h-125 w-full">
         {banners.map((banner, i) => {
           const offset = (i - currentIndex + banners.length) % banners.length;
           const adjustedOffset = offset > banners.length / 2 ? offset - banners.length : offset;
@@ -82,7 +82,7 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
               }}
               animate={!isDragging ? { x: baseX, rotate: baseRotate, scale, opacity } : undefined}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute w-[70vw] max-w-[280px] aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-gray-100 shadow-xl cursor-grab active:cursor-grabbing will-change-transform"
+              className="absolute w-[70vw] max-w-70 aspect-[2.75/4] rounded-4xl overflow-hidden bg-white border border-gray-100 shadow-xl cursor-grab active:cursor-grabbing will-change-transform"
             >
               <div className="relative w-full h-full select-none">
                 <img
@@ -93,7 +93,7 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
                 />
                 
                 {(banner.title || banner.subtitle) && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none pt-12">
+                  <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none pt-12">
                     <h3 className="font-serif text-lg font-medium tracking-wide leading-tight">
                         {banner.title}
                     </h3>
