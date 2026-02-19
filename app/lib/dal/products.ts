@@ -10,8 +10,38 @@ interface CreateProductData {
   images: string[];
 }
 
-// ============= GET ALL PRODUCTS =============
+// ============= GET ALL PRODUCTS (PUBLIC) =============
+// ⚠️ This is called by the public /api/products endpoint.
+// Do NOT add is_active, is_featured, or pricing fields here.
 export async function getAllProducts() {
+  const products = await prisma.product.findMany({
+    where: { isActive: true }, // Only return active products publicly
+    include: {
+      category: {
+        select: { name: true }
+      },
+      images: {
+        orderBy: { position: 'asc' },
+        take: 1
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return products.map(p => ({
+    id: p.id,
+    name: p.name,
+    product_code: p.productCode,
+    weight: p.weight.toString(),
+    is_sold_out: p.isSoldOut,
+    category_name: p.category?.name || null, // Fixed: was misleadingly named category_id
+    image: p.images[0]?.imageUrl || null
+  }));
+}
+
+// ============= GET ALL PRODUCTS (ADMIN) =============
+// Full data including admin flags — only used by admin panel routes
+export async function getAllProductsAdmin() {
   const products = await prisma.product.findMany({
     include: {
       category: {
@@ -33,7 +63,8 @@ export async function getAllProducts() {
     is_active: p.isActive,
     is_sold_out: p.isSoldOut,
     is_featured: p.isFeatured,
-    category_id: p.category?.name || null,
+    category_name: p.category?.name || null,
+    category_id: p.categoryId,
     image: p.images[0]?.imageUrl || null
   }));
 }
@@ -102,20 +133,13 @@ export async function updateProduct(id: string, data: Partial<CreateProductData>
   if (product_code) updateData.productCode = product_code;
   if (category_id) updateData.categoryId = category_id;
 
-  // Update product details
   await prisma.product.update({
     where: { id },
     data: updateData
   });
 
-  // Update images if provided
   if (images && images.length > 0) {
-    // Delete old images
-    await prisma.productImage.deleteMany({
-      where: { productId: id }
-    });
-
-    // Create new images
+    await prisma.productImage.deleteMany({ where: { productId: id } });
     await prisma.productImage.createMany({
       data: images.map((url, index) => ({
         productId: id,
@@ -128,10 +152,7 @@ export async function updateProduct(id: string, data: Partial<CreateProductData>
 
 // ============= DELETE PRODUCT =============
 export async function deleteProduct(id: string) {
-  // Prisma will cascade delete images automatically
-  await prisma.product.delete({
-    where: { id }
-  });
+  await prisma.product.delete({ where: { id } });
 }
 
 // ============= TOGGLE STOCK STATUS =============

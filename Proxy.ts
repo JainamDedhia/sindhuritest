@@ -1,84 +1,58 @@
-// lib/ratelimit.ts
-// Sliding window rate limiting via Upstash Redis.
-// Different limits apply depending on route sensitivity.
+// proxy.ts (Next.js 16 equivalent of middleware.ts)
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
 
-// Shared Redis client (reused across all limiters)
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+  // ─────────────────────────────────────────────
+  // BLOCK 1: Protect /api/admin/* routes
+  // These are skipped by frontend auth — server must validate
+  // ─────────────────────────────────────────────
+  if (pathname.startsWith("/api/admin")) {
+    // Allow login/logout endpoints through (they don't require session)
+    if (
+      pathname === "/api/admin/login" ||
+      pathname === "/api/admin/logout"
+    ) {
+      return NextResponse.next()
+    }
 
-// ─────────────────────────────────────────────────────────
-// RATE LIMIT TIERS
-// Sliding window = fairer than fixed window under burst traffic
-// ─────────────────────────────────────────────────────────
+    const adminSession = request.cookies.get("admin_session")?.value
 
-/**
- * AUTH routes — strictest limit
- * Protects login/register from brute force & credential stuffing.
- * 5 requests per 1 minute per IP
- */
-export const authLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: true,
-  prefix: "rl:auth",
-});
-
-/**
- * MUTATION routes — strict limit
- * Covers cart, wishlist, profile updates, checkout.
- * 30 requests per 1 minute per IP
- */
-export const mutationLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, "1 m"),
-  analytics: true,
-  prefix: "rl:mutation",
-});
-
-/**
- * GENERAL API routes — permissive limit
- * Covers product listings, search, public data.
- * 100 requests per 1 minute per IP
- */
-export const generalLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"),
-  analytics: true,
-  prefix: "rl:general",
-});
-
-// ─────────────────────────────────────────────────────────
-// ROUTE → LIMITER MAPPING
-// Returns the correct limiter based on the request pathname.
-// ─────────────────────────────────────────────────────────
-
-export type LimiterResult = Awaited<ReturnType<typeof generalLimiter.limit>>;
-
-export function getLimiterForPath(pathname: string): typeof generalLimiter {
-  // Auth routes — brute force protection
-  if (
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/register")
-  ) {
-    return authLimiter;
+    if (!adminSession || adminSession !== "authenticated") {
+      // Return JSON 401 — API callers are not browsers, don't redirect
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access required." },
+        { status: 401 }
+      )
+    }
   }
 
-  // Mutation routes — write operations
-  if (
-    pathname.startsWith("/api/cart") ||
-    pathname.startsWith("/api/wishlist") ||
-    pathname.startsWith("/api/profile") ||
-    pathname.startsWith("/api/checkout") ||
-    pathname.startsWith("/api/orders")
-  ) {
-    return mutationLimiter;
+  // ─────────────────────────────────────────────
+  // BLOCK 2: Protect /admin/* UI pages (your existing logic)
+  // Redirect unauthenticated users to login page
+  // ─────────────────────────────────────────────
+  if (pathname.startsWith("/admin")) {
+    if (pathname === "/admin/login") {
+      return NextResponse.next()
+    }
+
+    const adminSession = request.cookies.get("admin_session")?.value
+
+    if (!adminSession || adminSession !== "authenticated") {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
+    }
   }
 
-  // Everything else — general API
-  return generalLimiter;
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    // Run on admin UI pages
+    "/admin/:path*",
+    // Run on admin API routes — THIS WAS MISSING BEFORE
+    "/api/admin/:path*",
+  ],
 }

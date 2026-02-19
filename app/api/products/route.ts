@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createProduct, getAllProducts } from "@/app/lib/dal/products";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
-// GET: Fetch all Products
+/* ================= GET (PUBLIC) ================= */
 export async function GET() {
   try {
     const products = await getAllProducts();
@@ -12,8 +14,11 @@ export async function GET() {
   }
 }
 
-// POST: Create a new Product
-export async function POST(req: Request) {
+/* ================= POST (ADMIN ONLY) ================= */
+export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+
   try {
     const body = await req.json();
 
@@ -33,11 +38,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Product created", productId }, { status: 201 });
   } catch (error: any) {
     console.error("POST PRODUCTS ERROR:", error);
-
-    if (error.code === 'P2002') {
+    if (error.code === "P2002") {
       return NextResponse.json({ error: "Product code already exists" }, { status: 409 });
     }
-
     return NextResponse.json({ error: "Failed to create Product" }, { status: 500 });
   }
 }
