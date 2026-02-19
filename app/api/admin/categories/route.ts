@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAllCategories, createCategory, deleteCategory } from "@/app/lib/dal/categories";
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 // GET: Fetch all categories
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const categories = await getAllCategories();
     return NextResponse.json(categories);

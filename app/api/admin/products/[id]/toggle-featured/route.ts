@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { toggleProductFeatured } from "@/app/lib/dal/products";
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const { id } = await params;
     const { is_featured } = await req.json();

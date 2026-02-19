@@ -14,7 +14,7 @@ export default function CategoryBento() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/bento")
+    fetch("/api/public/bento")
       .then(res => res.json())
       .then(data => setItems(data))
       .catch(err => console.error(err));

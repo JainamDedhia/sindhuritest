@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { authLimiter } from "@/lib/ratelimit";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
+
+  const { success, limit, remaining, reset } = await authLimiter.limit(ip);
+
+  if (!success) {
+    return NextResponse.json(
+      { success: false, message: "Too many login attempts. Try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
+
   try {
     const { username, password } = await req.json();
 

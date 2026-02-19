@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; // Ensure this points to your prisma client instance
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     // Run all independent queries in parallel using $transaction for speed
     const [totalProducts, totalCategories, soldOutCount, totalUsers, categoriesData] = 

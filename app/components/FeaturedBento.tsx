@@ -14,7 +14,7 @@ export default function FeaturedBento() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/FeaturedBento")
+    fetch("/api/public/featured-bento")
       .then(res => res.json())
       .then(data => {
         if (data.length >= 3) {

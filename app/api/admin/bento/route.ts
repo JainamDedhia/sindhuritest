@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAllBentoItems, createBentoItem, deleteBentoItem } from "@/app/lib/dal/bento";
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 // GET: Fetch all bento items
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const items = await getAllBentoItems();
     return NextResponse.json(items);
@@ -12,7 +17,10 @@ export async function GET() {
 }
 
 // POST: Add a new bento item
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const body = await req.json();
     const { title, subtitle, image_url, target_link, size, position } = body;
@@ -34,7 +42,10 @@ export async function POST(req: Request) {
 }
 
 // DELETE: Remove item
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const { id } = await req.json();
     await deleteBentoItem(id);

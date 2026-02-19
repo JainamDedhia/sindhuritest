@@ -10,7 +10,7 @@ export default function GoldRateBanner() {
   useEffect(() => {
     async function fetchRate() {
       try {
-        const res = await fetch("/api/admin/settings", { next: { revalidate: 60 } });
+        const res = await fetch("/api/public/gold-rate", { next: { revalidate: 60 } });
         const data = await res.json();
         setRate(data.rate);
       } catch (err) {

@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const items = await prisma.featuredBento.findMany({
       orderBy: { rank: 'asc' },
@@ -15,7 +20,10 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const contentType = req.headers.get("content-type") || "";
 

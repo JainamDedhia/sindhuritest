@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getGoldRate, setGoldRate } from "@/app/lib/dal/settings";
+import { NextRequest } from "next/server";
+import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const rate = await getGoldRate();
     return NextResponse.json({ rate });
@@ -11,7 +16,10 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+  
   try {
     const { rate } = await req.json();
 
