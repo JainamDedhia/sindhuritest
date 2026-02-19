@@ -4,7 +4,8 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public code?: string
+    public code?: string,
+    public retryAfter?: number // seconds until retry is safe
   ) {
     super(message);
     this.name = "ApiError";
@@ -17,21 +18,17 @@ interface RequestOptions extends RequestInit {
 }
 
 /**
- * Enhanced fetch wrapper with error handling, retries, and toast notifications
+ * Enhanced fetch wrapper with error handling, retries, and toast notifications.
+ * Handles 429 Rate Limit responses with Retry-After header support.
  */
 export async function apiClient<T = any>(
   url: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const {
-    showToast = true,
-    retries = 0,
-    ...fetchOptions
-  } = options;
+  const { showToast = true, retries = 0, ...fetchOptions } = options;
 
   let lastError: Error | null = null;
 
-  // Retry logic
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url, {
@@ -42,47 +39,57 @@ export async function apiClient<T = any>(
         },
       });
 
-      // Handle non-OK responses
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
+        // Parse Retry-After header for rate limit errors
+        const retryAfter = response.headers.get("Retry-After")
+          ? parseInt(response.headers.get("Retry-After")!, 10)
+          : undefined;
+
         throw new ApiError(
           errorData.error || `Request failed with status ${response.status}`,
           response.status,
-          errorData.code
+          errorData.code,
+          retryAfter
         );
       }
 
-      // Success - return data
       const data = await response.json();
       return data as T;
-
     } catch (error) {
       lastError = error as Error;
 
-      // Don't retry on client errors (4xx)
-      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+      // Don't retry on client errors (4xx) — including 429
+      if (
+        error instanceof ApiError &&
+        error.status >= 400 &&
+        error.status < 500
+      ) {
         break;
       }
 
-      // Wait before retrying (exponential backoff)
       if (attempt < retries) {
-        await new Promise(resolve => 
+        await new Promise((resolve) =>
           setTimeout(resolve, Math.pow(2, attempt) * 1000)
         );
       }
     }
   }
 
-  // All retries failed
+  // Show toast for rate limit with a specific message
   if (showToast && typeof window !== "undefined") {
-    // Import toast dynamically to avoid SSR issues
     import("@/app/store/uiStore").then(({ useUIStore }) => {
-      const showToast = useUIStore.getState().showToast;
-      showToast(
-        lastError?.message || "Something went wrong",
-        "error"
-      );
+      const showToastFn = useUIStore.getState().showToast;
+
+      if (lastError instanceof ApiError && lastError.status === 429) {
+        const retryMsg = lastError.retryAfter
+          ? ` Try again in ${lastError.retryAfter}s.`
+          : "";
+        showToastFn(`Too many requests.${retryMsg}`, "error");
+      } else {
+        showToastFn(lastError?.message || "Something went wrong", "error");
+      }
     });
   }
 
@@ -119,33 +126,3 @@ export const api = {
   delete: <T>(url: string, options?: RequestOptions) =>
     apiClient<T>(url, { ...options, method: "DELETE" }),
 };
-
-// ============= USAGE EXAMPLES =============
-/*
-// Basic usage
-const products = await api.get('/api/products');
-
-// With error handling
-try {
-  const result = await api.post('/api/cart', { productId: '123' });
-  console.log('Added to cart:', result);
-} catch (error) {
-  if (error instanceof ApiError) {
-    if (error.status === 401) {
-      // Redirect to login
-    } else if (error.code === 'SOLD_OUT') {
-      // Show sold out message
-    }
-  }
-}
-
-// With retries
-const data = await api.get('/api/unstable-endpoint', { 
-  retries: 3 
-});
-
-// Without toast notification
-const silent = await api.post('/api/analytics', data, { 
-  showToast: false 
-});
-*/
