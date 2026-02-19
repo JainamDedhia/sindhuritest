@@ -2,7 +2,9 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export async function middleware(request: NextRequest) {
+// The function MUST be named either "middleware" or exported as default
+// Based on the error, Next.js expects a default export or a named export "proxy"
+export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // ─────────────────────────────────────────────

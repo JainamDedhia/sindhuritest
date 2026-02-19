@@ -28,7 +28,7 @@ export default function AdminProductListPage() {
   const fetchProducts = async () => {
     try {
       // Pointing to Admin API to get full details including is_featured
-      const res = await fetch("/api/products"); 
+      const res = await fetch("/api/admin/products"); 
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setProducts(data);
