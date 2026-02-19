@@ -1,6 +1,7 @@
 "use client";
 
 import { Play, Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const VIDEO_REVIEWS = [
   {
@@ -34,30 +35,60 @@ const VIDEO_REVIEWS = [
 ];
 
 function VideoCard({ review }: { review: any }) {
-  // 🔥 IMMEDIATE AUTOPLAY - no intersection observer needed
-  const embedUrl = `https://www.youtube.com/embed/${review.youtubeId}?autoplay=1&mute=1&loop=1&playlist=${review.youtubeId}&controls=0&modestbranding=1&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1`;
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // ✅ Load iframe ONLY when visible
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "100px",
+      }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${review.youtubeId}?autoplay=0&mute=1&controls=0&modestbranding=1&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&disablekb=1&playsinline=1`;
 
   return (
-    <div className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group snap-center rounded-2xl overflow-hidden shadow-lg bg-black">
+    <div
+      ref={containerRef}
+      className="relative flex-shrink-0 w-[280px] md:w-full aspect-[9/16] group snap-center rounded-2xl overflow-hidden shadow-lg bg-black"
+    >
       
-      {/* 🔥 YOUTUBE IFRAME - Loads immediately, no conditions */}
-      <iframe
-        src={embedUrl}
-        className="absolute inset-0 w-full h-full z-10"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-        loading="eager"
-        style={{ 
-          border: 'none', 
-          pointerEvents: 'none'
-        }}
-        title={`Video review from ${review.customer}`}
-      />
+      {/* 🔥 ONLY render iframe when visible */}
+      {isVisible && (
+        <iframe
+          src={embedUrl}
+          className="absolute inset-0 w-full h-full z-10"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          style={{
+            border: "none",
+            pointerEvents: "none",
+          }}
+          title={`Video review from ${review.customer}`}
+        />
+      )}
 
-      {/* Invisible Interaction Blocker - Prevents YouTube UI from showing */}
-      <div 
-        className="absolute inset-0 z-20" 
-        style={{ pointerEvents: 'auto', cursor: 'default' }}
+      {/* Invisible Interaction Blocker */}
+      <div
+        className="absolute inset-0 z-20"
+        style={{ pointerEvents: "auto", cursor: "default" }}
       />
 
       {/* Visual Gradients */}
@@ -75,7 +106,7 @@ function VideoCard({ review }: { review: any }) {
         <h3 className="text-xl font-serif text-white leading-snug mb-1 drop-shadow-lg">
           {review.customer}
         </h3>
-        
+
         <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-3">
           {review.location}
         </p>
@@ -84,7 +115,6 @@ function VideoCard({ review }: { review: any }) {
           "{review.quote}"
         </p>
       </div>
-      
     </div>
   );
 }
