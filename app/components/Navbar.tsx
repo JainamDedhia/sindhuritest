@@ -95,24 +95,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3 md:gap-6">
             
             {/* DESKTOP SEARCH BAR */}
-            <form 
-                onSubmit={handleSearch} 
-                className="hidden md:block relative group w-100%"
-            >
-               <input 
-                 type="text"
-                 placeholder="Search products..."
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-64 bg-gray-100 hover:bg-gray-200 focus:bg-white border border-transparent focus:border-[var(--color-gold-primary)] rounded-md py-2 pl-4 pr-10 text-sm text-gray-900 placeholder:text-gray-500 outline-none transition-all duration-200 "
-               />
-               <button 
-                 type="submit"
-                 className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-[var(--color-gold-primary)] transition-colors"
-               >
-                 <Search size={18} />
-               </button>
-            </form>
+            
 
             <div className="flex items-center gap-4 md:border-l md:border-gray-200 md:pl-6 h-6">
                 
@@ -192,22 +175,8 @@ export default function Navbar() {
       >
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
-          {/* MOBILE SEARCH */}
-          <form onSubmit={handleSearch} className="relative mb-2 ">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg bg-gray-50 py-2 pl-4 pr-10 text-sm outline-none focus:ring-1 focus:ring-black border border-gray-200"
-            />
-            <button 
-              type="submit"
-              className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-black"
-            >
-              <Search size={16} />
-            </button>
-          </form>
+          
+          
 
           <Link
             href="/products"

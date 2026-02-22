@@ -1,3 +1,4 @@
+import CampaignBento from "./components/CampaignBento";
 import CategoryBento from "./components/CategoryBento";
 import FeaturedBento from "./components/FeaturedBento";
 import FeaturedCollection from "./components/FeaturedCollection";
@@ -25,6 +26,8 @@ export default function HomePage() {
 
       {/* Featured Products */}
       <FeaturedCollection />
+
+      <CampaignBento />
 
       <ReviewsSection />
 

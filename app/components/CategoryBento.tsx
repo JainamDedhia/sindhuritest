@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
-import { getBentoTile } from "@/lib/imageOptimizer";
+// Make sure this import is correct for your project structure
+// import { getBentoTile } from "@/lib/imageOptimizer"; 
 
 export default function CategoryBento() {
   const [items, setItems] = useState<any[]>([]);
@@ -39,15 +40,17 @@ export default function CategoryBento() {
     <section className="py-12 md:py-24 bg-white relative">
       
       <div className="text-center max-w-2xl mx-auto mb-10 md:mb-16 px-6">
-        <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-[#C8A45D] block mb-3 opacity-90">
+        <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-[#000000] block mb-3 opacity-90">
           Our Collections
         </span>
-        <h2 className="font-serif text-3xl md:text-5xl bg-gradient-to-r from-[#e60b09] to-[#000000] via-[#ffbb00] bg-clip-text text-transparent pb-1">
+        <div className="bg-amber-50  m-5 opacity-100">
+        <h2 className="font-serif text-4xl md:text-5xl bg-gradient-to-r from-[#0e0725] via-[#e60b09] via-[#e9d022] to-[#0e0725] bg-clip-text text-transparent pb-1">
           Shop by Category
         </h2>
+        </div>
       </div>
 
-      {/* DESKTOP VIEW */}
+      {/* ================= DESKTOP VIEW (Unchanged) ================= */}
       <div className="hidden lg:grid container mx-auto max-w-[1400px] px-8 grid-cols-4 gap-6 auto-rows-[300px]">
         {items.map((item, index) => (
           <Link
@@ -55,7 +58,6 @@ export default function CategoryBento() {
             href={getCategoryFilterUrl(item.title)}
             className={`group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm hover:shadow-2xl transition-all duration-700 ${getDesktopSizeClass(item.size)}`}
           >
-            {/* 🔥 OPTIMIZED: First item loads eagerly (above fold), rest lazy */}
             <div className="absolute inset-0 transition-transform duration-1000 ease-out group-hover:scale-105">
               <OptimizedImage
                 src={item.image_url}
@@ -85,53 +87,31 @@ export default function CategoryBento() {
         ))}
       </div>
 
-      {/* MOBILE VIEW */}
+      {/* ================= MOBILE VIEW (Uniform Grid) ================= */}
       <div className="lg:hidden px-5 flex flex-col gap-5">
         
+        {/* Uniform 2-Column Grid for ALL items */}
         {items.length > 0 && (
-          <Link 
-             href={getCategoryFilterUrl(items[0].title)}
-             className="relative w-full aspect-[4/5] max-h-[55vh] rounded-[20px] overflow-hidden shadow-md group"
-          >
-             <OptimizedImage
-               src={items[0].image_url}
-               alt={items[0].title}
-               priority={true}
-               width={768}
-               height={960}
-               quality={82}
-               showBlur={true}
-             />
-             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-             <div className="absolute bottom-8 inset-x-0 text-center z-10 px-4">
-                <h3 className="text-3xl font-serif text-white tracking-wide drop-shadow-md">
-                  {items[0].title}
-                </h3>
-                <div className="h-[2px] w-12 bg-[#C8A45D] mx-auto mt-3 rounded-full" />
-             </div>
-          </Link>
-        )}
-
-        {items.length > 1 && (
-          <div className="grid grid-cols-2 gap-4">
-             {items.slice(1).map((item) => (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+             {items.map((item, index) => (
                <Link
                  key={item.id}
                  href={getCategoryFilterUrl(item.title)}
-                 className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm bg-gray-50"
+                 className="relative aspect-[4/5] rounded-xl overflow-hidden shadow-sm bg-gray-50 group"
                >
                  <OptimizedImage
                    src={item.image_url}
                    alt={item.title}
                    width={300}
-                   height={400}
+                   height={375}
+                   priority={index < 2} // Load first row instantly
                    quality={75}
                    showBlur={true}
-                   sizes="(max-width: 640px) 50vw, 25vw"
+                   sizes="(max-width: 640px) 50vw, 33vw"
                  />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
-                 <div className="absolute bottom-5 inset-x-0 text-center px-2">
-                    <h3 className="text-xl font-serif text-white tracking-wide drop-shadow-sm leading-tight">
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                 <div className="absolute bottom-4 inset-x-0 text-center px-2 z-10">
+                    <h3 className="text-lg md:text-xl font-serif text-white tracking-wide drop-shadow-sm leading-tight">
                       {item.title}
                     </h3>
                  </div>
@@ -140,7 +120,7 @@ export default function CategoryBento() {
           </div>
         )}
 
-        <div className="mt-6 text-center pb-8 border-b border-gray-100">
+        <div className="mt-4 text-center pb-8 border-b border-gray-100">
            <Link 
              href="/products" 
              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#4A3F35] hover:text-[#C8A45D] transition-colors py-2"

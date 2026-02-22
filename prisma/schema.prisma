@@ -204,3 +204,11 @@ model FeaturedBento {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model CampaignBento{
+  id          String   @id @default(cuid()) // Use @default(auto()) @map("_id") @db.ObjectId if using MongoDB
+  rank        Int      @unique // 0 = Background, 1 = Main, 2 = Top Right, 3 = Bottom Right
+  title       String?  // Optional because the background doesn't need a title
+  image_url   String
+  target_link String?
+}

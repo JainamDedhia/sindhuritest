@@ -269,8 +269,23 @@ export default function AdminSidebar({ onClose }: AdminSidebarProps) {
                            : "text-gray-500 hover:text-gray-200"
                       }`}
                     >
+                      <Layers size={18} />
+                      <span>Showcase Carousel</span>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/admin/FeaturedBento" onClick={handleLinkClick}>
+                    <motion.div 
+                       whileHover={{ x: 5 }} 
+                       transition={hoverTransition}
+                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+                        isActive("/admin/bento") 
+                           ? "text-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10 font-medium" 
+                           : "text-gray-500 hover:text-gray-200"
+                      }`}
+                    >
                       <PlusSquare size={18} />
-                      <span>Showcase Banner</span>
+                      <span>Featured Bento</span>
                     </motion.div>
                   </Link>
                 </div>
