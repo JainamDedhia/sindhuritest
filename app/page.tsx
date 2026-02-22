@@ -1,3 +1,11 @@
+<<<<<<< Updated upstream
+=======
+import CampaignBento from "./components/CampaignBento";
+import CategoryBento from "./components/CategoryBento";
+import FeaturedBento from "./components/FeaturedBento";
+import FeaturedCollection from "./components/FeaturedCollection";
+import GoldRateBanner from "./components/GoldRateBanner";
+>>>>>>> Stashed changes
 import HeroSection from "./components/HeroSection"
 
 export default function HomePage() {
@@ -14,6 +22,7 @@ export default function HomePage() {
       </div>
 
       {/* Featured Products */}
+<<<<<<< Updated upstream
       <div>
         <h2 className="text-lg font-semibold mb-3">Featured Jewellery</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -22,6 +31,15 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+=======
+      <FeaturedCollection />
+
+      <CampaignBento />
+
+      <ReviewsSection />
+
+      <VideoTestimonials />
+>>>>>>> Stashed changes
     </main>
   );
 }
