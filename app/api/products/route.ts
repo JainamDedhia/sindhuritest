@@ -1,13 +1,33 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { createProduct, getAllProducts } from "@/app/lib/dal/products";
+import { prisma } from "@/lib/prisma";
+import { createProduct } from "@/app/lib/dal/products";
 import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 /* ================= GET (PUBLIC) ================= */
 export async function GET() {
   try {
-    const products = await getAllProducts();
-    return NextResponse.json(products);
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      include: {
+        category: { select: { name: true } },
+        images: { orderBy: { position: "asc" }, take: 1 },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const transformed = products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description ?? "",
+      weight: p.weight.toString(),
+      is_sold_out: p.isSoldOut,
+      // ✅ FIX: return category NAME, not the UUID
+      category_name: p.category?.name ?? "Jewelry",
+      image: p.images[0]?.imageUrl ?? null,
+    }));
+
+    return NextResponse.json(transformed);
   } catch (error: any) {
     console.error("GET PRODUCTS ERROR:", error.message);
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });

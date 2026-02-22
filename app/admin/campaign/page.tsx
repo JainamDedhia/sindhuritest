@@ -21,8 +21,8 @@ export default function AdminCampaignPage() {
 
   const fetchItems = async () => {
     try {
-      // Notice the updated URL to match our new folder!
-      const res = await fetch("/api/admin/campaign-bento");
+      // ✅ FIXED: was "/api/admin/campaign-bento" (wrong kebab-case)
+      const res = await fetch("/api/admin/CampaignBento");
       if (res.ok) setItems(await res.json());
     } catch (error) {
       console.error("Failed to load items");
@@ -57,7 +57,7 @@ export default function AdminCampaignPage() {
     if (!form.image_url) return alert("Please upload an image");
 
     try {
-      await fetch("/api/admin/CampaignBento", {
+      const res = await fetch("/api/admin/CampaignBento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,6 +68,8 @@ export default function AdminCampaignPage() {
         }),
       });
       
+      if (!res.ok) throw new Error("Save failed");
+
       setForm({ title: "", target_link: "/products", rank: 1, image_url: "" });
       fetchItems();
     } catch (error) {
@@ -174,6 +176,11 @@ export default function AdminCampaignPage() {
               </div>
             )
           })}
+          {items.length === 0 && (
+            <div className="md:col-span-4 py-16 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+              No campaign assets uploaded yet. Add one above!
+            </div>
+          )}
         </div>
       </div>
     </div>

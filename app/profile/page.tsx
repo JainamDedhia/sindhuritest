@@ -193,7 +193,7 @@ export default function ProfilePage() {
               </h3>
               <div className="space-y-2">
                 {[
-                  { icon: Package, label: "My Orders", href: "/orders" },
+                  { icon: Package, label: "My Orders", href: "/cart" },
                   { icon: Heart, label: "Wishlist", href: "/wishlist" },
                   { icon: ShoppingBag, label: "Shopping Cart", href: "/cart" },
                 ].map((item, i) => (
