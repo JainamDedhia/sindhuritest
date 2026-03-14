@@ -10,7 +10,6 @@ interface Banner {
   subtitle?: string;
 }
 
-
 function MobileStackCarousel({ banners }: { banners: Banner[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -25,7 +24,7 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
     if (isDragging || !banners || banners.length === 0) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 4000);
+    }, 3000); // 🚀 FASTER: Changed from 4000ms to 3000ms
     return () => clearInterval(interval);
   }, [isDragging, banners?.length]);
 
@@ -44,21 +43,25 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
       else setCurrentIndex((prev) => (prev + 1) % banners.length);
     }
 
-    animate(dragX, 0, { type: 'spring', stiffness: 500, damping: 30 });
+    // 🚀 FASTER SNAP: Increased stiffness from 500 to 600
+    animate(dragX, 0, { type: 'spring', stiffness: 800, damping: 25 });
   };
 
   if (!banners || banners.length === 0) return null;
 
   return (
+    // Kept py-6 so margins don't expand
     <div className="flex flex-col items-center justify-center h-full w-full py-6">
-      <div className="relative flex items-center justify-center h-125 w-full">
+      {/* Set explicit height to hold larger cards without pushing layout */}
+      <div className="relative flex items-center justify-center h-[420px] sm:h-[480px] w-full">
         {banners.map((banner, i) => {
           const offset = (i - currentIndex + banners.length) % banners.length;
           const adjustedOffset = offset > banners.length / 2 ? offset - banners.length : offset;
 
           if (Math.abs(adjustedOffset) > 2) return null;
 
-          const baseX = adjustedOffset * 15;
+          // Spread them slightly more since the cards are bigger
+          const baseX = adjustedOffset * 18; 
           const baseRotate = adjustedOffset * 4;
           const scale = Math.max(0.85, 1 - Math.abs(adjustedOffset) * 0.08);
           const zIndex = 10 - Math.abs(adjustedOffset);
@@ -81,8 +84,11 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
                 transformOrigin: 'bottom center',
               }}
               animate={!isDragging ? { x: baseX, rotate: baseRotate, scale, opacity } : undefined}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute w-[70vw] max-w-70 aspect-[2.75/4] rounded-4xl overflow-hidden bg-white border border-gray-100 shadow-xl cursor-grab active:cursor-grabbing will-change-transform"
+              // 🚀 FASTER ANIMATION: Increased stiffness from 300 to 450
+              transition={{ type: 'spring', stiffness: 650, damping: 25 }}
+              
+              // 📏 BIGGER CARDS: Increased width from 70vw to 85vw and max-w from 70 (~280px) to 340px
+              className="absolute w-[85vw] max-w-85 aspect-[2.5/4] rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-grab active:cursor-grabbing will-change-transform"
             >
               <div className="relative w-full h-full select-none">
                 <img
@@ -94,11 +100,11 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
                 
                 {(banner.title || banner.subtitle) && (
                   <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none pt-12">
-                    <h3 className="font-serif text-lg font-medium tracking-wide leading-tight">
+                    <h3 className="font-serif text-xl font-medium tracking-wide leading-tight">
                         {banner.title}
                     </h3>
                     {banner.subtitle && (
-                      <p className="text-xs opacity-90 font-light mt-1">
+                      <p className="text-sm opacity-90 font-light mt-1">
                           {banner.subtitle}
                       </p>
                     )}
@@ -107,21 +113,21 @@ function MobileStackCarousel({ banners }: { banners: Banner[] }) {
               </div>
               
               {/* Overlay Gradient for non-active cards */}
-              {!isCenterCard && <div className="absolute inset-0 bg-white/10 z-30" />}
+              {!isCenterCard && <div className="absolute inset-0 bg-white/10 z-30 pointer-events-none" />}
             </motion.div>
           );
         })}
       </div>
 
       {/* Dots Indicator */}
-      <div className="flex justify-center gap-1.5 mt-4">
+      <div className="flex justify-center gap-1.5 mt-6">
         {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrentIndex(i)}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               i === currentIndex 
-                ? 'w-5 bg-[var(--color-gold-primary)]' 
+                ? 'w-5 bg-[#C8A45D]' 
                 : 'w-1.5 bg-gray-200'
             }`}
           />

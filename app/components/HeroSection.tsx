@@ -37,13 +37,13 @@ export default function HeroSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="h-[500px] w-full bg-gray-50 animate-pulse" />;
+  if (loading) return <div className="h-125 w-full bg-gray-50 animate-pulse" />;
 
   return (
     <section className="w-full bg-white relative group">
       
       {/* ================= DESKTOP (Luxury Parallax) ================= */}
-      <div className="hidden md:block h-[550px] relative overflow-hidden">
+      <div className="hidden md:block h-137.5 relative overflow-hidden">
         {desktopBanners.length > 0 ? (
           <LuxurySlider banners={desktopBanners} />
         ) : (
@@ -54,7 +54,7 @@ export default function HeroSection() {
       </div>
 
       {/* ================= MOBILE (Stack Carousel) ================= */}
-      <div className="block md:hidden h-[60vh] min-h-[500px] relative overflow-hidden bg-[#FAFAFA]">
+      <div className="block md:hidden h-[80vh] min-h-150 relative overflow-hidden bg-[#FAFAFA]">
         {mobileBanners.length > 0 ? (
           <MobileStackCarousel banners={mobileBanners} />
         ) : (
@@ -131,7 +131,7 @@ function LuxurySlider({ banners }: { banners: Banner[] }) {
           />
           {(currentBanner.title || currentBanner.subtitle) && (
             <>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-90" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-90" />
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 text-center text-white z-10 px-6">
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}

@@ -8,6 +8,7 @@ import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackToHome from "../components/BackToHome";
 
 export default function WishlistPage() {
   const { data: session, status } = useSession();
@@ -48,7 +49,7 @@ export default function WishlistPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-(--color-gold-primary) mx-auto mb-4" />
           <p className="text-sm text-gray-500">Loading...</p>
         </div>
       </div>
@@ -63,7 +64,9 @@ export default function WishlistPage() {
   // 🔥 ONLY RENDER WISHLIST IF AUTHENTICATED
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
-      
+      <div className="mb-3">
+        <BackToHome />
+      </div>
       {/* HEADER */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Wishlist ({items.length})</h1>

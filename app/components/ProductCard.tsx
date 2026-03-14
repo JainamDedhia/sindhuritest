@@ -215,7 +215,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
             ) : (
               <>
                 <MessageCircle size={13} />
-                Enquire via WhatsApp
+                Whatsapp Enquiry
               </>
             )}
           </button>

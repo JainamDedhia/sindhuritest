@@ -36,9 +36,13 @@ export default function FeaturedBento() {
         <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-[#000000] mb-3">
            Handpicked Favorites
         </span>
-        <h2 className="font-serif text-4xl md:text-6xl leading-tight pb-2 text-transparent bg-clip-text bg-linear-to-r from-[#0e0725] via-[#e60b09]  to-[#0e0725] ">
+        <div className="bg-amber-50">
+
+        
+        <h2 className="font-serif text-4xl md:text-5xl leading-tight pb-2 text-transparent bg-clip-text bg-linear-to-r from-[#0e0725] via-[#e60b09]  to-[#0e0725] ">
           Curated Gifting Edits
         </h2>
+        </div>
       </div>
 
       {/* BENTO GRID */}

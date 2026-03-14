@@ -6,6 +6,7 @@ import { useCartStore } from "@/app/store/cartStore";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackToHome from "../components/BackToHome";
 
 export default function CartPage() {
   const { data: session, status } = useSession();
@@ -56,7 +57,7 @@ export default function CartPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-(--color-gold-primary) mx-auto mb-4" />
           <p className="text-sm text-gray-500">Loading...</p>
         </div>
       </div>
@@ -68,7 +69,7 @@ export default function CartPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[var(--color-gold-primary)] mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-(--color-gold-primary) mx-auto mb-4" />
           <p className="text-sm text-gray-500">Redirecting to login...</p>
         </div>
       </div>
@@ -78,6 +79,7 @@ export default function CartPage() {
   // 🔥 ONLY RENDER IF AUTHENTICATED
   return (
     <div className="container mx-auto min-h-[60vh] px-4 py-8">
+      <BackToHome />
       
       {/* HEADER WITH SYNC STATUS */}
       <div className="mb-8 flex items-center justify-between">
@@ -157,7 +159,7 @@ export default function CartPage() {
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="min-w-[2rem] text-center text-xs font-semibold">
+                      <span className="min-w-8 text-center text-xs font-semibold">
                         {item.quantity}
                       </span>
                       <button
@@ -205,7 +207,7 @@ export default function CartPage() {
 
             <button 
               disabled={isLoading}
-              className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-gold-primary)] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-gold-accent)] active:scale-95 disabled:opacity-50"
+              className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-(--color-gold-primary) px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-gold-accent)] active:scale-95 disabled:opacity-50"
             >
               Enquire about this Order
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

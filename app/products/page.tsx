@@ -6,8 +6,9 @@ import ProductCardSkeleton from "@/app/components/ProductCardSkeleton";
 import { X, SlidersHorizontal, Search, Check, Trash2, Sparkles } from "lucide-react";
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
+import BackToHome from "../components/BackToHome";
 
-// ✅ FIX: use category_name (string) instead of category_id (UUID)
+// This is Product Interface
 interface ApiProduct {
   id: string;
   name: string;
@@ -17,7 +18,7 @@ interface ApiProduct {
   category_name: string;
   image: string;
 }
-
+// This is Category Interface
 interface Category {
   id: string;
   name: string;
@@ -83,7 +84,7 @@ function ProductContent() {
       product.name.toLowerCase().includes(query) ||
       (product.category_name || "").toLowerCase().includes(query);
 
-    // ✅ FIX: compare category_name (not category_id) against selected names
+
     const matchesCategory =
       selectedCategories.length === 0 ||
       selectedCategories.includes(product.category_name);
@@ -110,6 +111,7 @@ function ProductContent() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
+      
 
       {/* ===== HERO HEADER ===== */}
       <div className="relative overflow-hidden bg-[#1A0A05] py-20 md:py-28">
@@ -118,64 +120,60 @@ function ProductContent() {
             backgroundImage: `radial-gradient(circle at 20% 50%, #C8A45D 0%, transparent 50%), radial-gradient(circle at 80% 20%, #8B1A1A 0%, transparent 50%)`,
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_#1A0A05_80%)]" />
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#C8A45D] to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#1A0A05_80%)]" />
+        <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-[#C8A45D] to-transparent opacity-60" />
 
         <div className="container mx-auto px-6 relative z-10 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-[#C8A45D] mb-5 block">
+            <span className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-[#C8A45D] mb-3 block">
               <Sparkles size={10} fill="currentColor" /> Sinduri Jewellers <Sparkles size={10} fill="currentColor" />
             </span>
-            <h1 className="font-serif text-5xl md:text-7xl text-white leading-none tracking-tight mb-6">Our Collection</h1>
-            <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#C8A45D] to-transparent mx-auto mb-6" />
+            <h1 className="font-serif text-5xl md:text-7xl text-white leading-none tracking-tight mb-3">Our Collection</h1>
+            <div className="h-px w-24 bg-linear-to-r from-transparent via-[#C8A45D] to-transparent mx-auto mb-6" />
             <p className="text-gray-400 text-sm md:text-base max-w-md mx-auto font-light tracking-wide">
               Curated elegance, handcrafted for every precious moment.
             </p>
           </motion.div>
 
-          {!loading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-              className="mt-8 inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-5 py-2">
-              <span className="w-2 h-2 rounded-full bg-[#C8A45D] animate-pulse" />
-              <span className="text-xs text-gray-400 tracking-widest uppercase">{filteredProducts.length} pieces available</span>
-            </motion.div>
-          )}
+          
         </div>
-        <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-[#FDFBF7] to-transparent" />
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 md:px-6 py-10">
+      <div className="mb-3">
+        <BackToHome/>
+      </div>
 
         {/* ===== SEARCH & FILTER BAR ===== */}
         <div className="mb-8 flex items-center gap-3 max-w-3xl mx-auto">
-          <div className="relative flex-1 group">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C8A45D]" />
-            <input
-              type="text"
-              placeholder="Search rings, necklaces, gold..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-[#E8DDD0] rounded-full py-3.5 pl-12 pr-10 text-sm text-gray-900 outline-none shadow-sm transition-all duration-300 placeholder:text-gray-400 focus:border-[#C8A45D] focus:ring-2 focus:ring-[#C8A45D]/15 font-light"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                <X size={15} />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#1A0A05] text-white text-sm font-medium hover:bg-[#2A1505] transition-all shadow-sm active:scale-95 whitespace-nowrap"
-          >
-            <SlidersHorizontal size={15} />
-            <span>Refine</span>
-            {activeFiltersCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#C8A45D] text-[10px] text-white font-bold">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-        </div>
+  <div className="relative flex-1 group">
+    <input
+      type="text"
+      placeholder="Search rings, necklaces, gold..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="w-full bg-white border border-[#E8DDD0] rounded-full py-3.5 pl-6 pr-20 text-sm text-gray-900 outline-none shadow-sm transition-all duration-300 placeholder:text-gray-400 focus:border-[#C8A45D] focus:ring-2 focus:ring-[#C8A45D]/15 font-light"
+    />
+    {searchQuery && (
+      <button onClick={() => setSearchQuery("")} className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+        <X size={15} />
+      </button>
+    )}
+    <Search size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#C8A45D]" />
+  </div>
+  <button
+    onClick={() => setIsFilterOpen(true)}
+    className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#1A0A05] text-white text-sm font-medium hover:bg-[#2A1505] transition-all shadow-sm active:scale-95 whitespace-nowrap"
+  >
+    <SlidersHorizontal size={15} />
+    <span>Refine</span>
+    {activeFiltersCount > 0 && (
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#C8A45D] text-[10px] text-white font-bold">
+        {activeFiltersCount}
+      </span>
+    )}
+  </button>
+</div>
 
         {/* ===== ACTIVE FILTERS PILLS ===== */}
         <AnimatePresence>
@@ -208,7 +206,7 @@ function ProductContent() {
             <div className="flex gap-2 min-w-max mx-auto justify-start md:justify-center">
               <button
                 onClick={() => setSelectedCategories([])}
-                className={`flex-shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
+                className={`shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
                   selectedCategories.length === 0 ? "bg-[#1A0A05] text-white border-[#1A0A05]" : "border-gray-200 text-gray-600 bg-white hover:border-[#C8A45D] hover:text-[#8B6914]"
                 }`}
               >
@@ -218,7 +216,7 @@ function ProductContent() {
                 <button
                   key={cat.id}
                   onClick={() => toggleCategory(cat.name)}
-                  className={`flex-shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
+                  className={`shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
                     selectedCategories.includes(cat.name) ? "bg-[#C8A45D] text-white border-[#C8A45D]" : "border-gray-200 text-gray-600 bg-white hover:border-[#C8A45D] hover:text-[#8B6914]"
                   }`}
                 >
@@ -256,7 +254,6 @@ function ProductContent() {
                     id: item.id,
                     title: item.name,
                     weight: item.weight,
-                    // ✅ FIX: pass actual category name
                     category: item.category_name || "Jewelry",
                     description: item.description,
                     image: item.image || "https://placehold.co/400x500",
@@ -290,7 +287,7 @@ function ProductContent() {
                 </button>
               </div>
 
-              <div className="h-px bg-gradient-to-r from-transparent via-[#C8A45D] to-transparent" />
+              <div className="h-px bg-linear-to-r from-transparent via-[#C8A45D] to-transparent" />
 
               <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-28">
 
@@ -328,7 +325,6 @@ function ProductContent() {
                   <div className="space-y-1">
                     {categories.map((category) => {
                       const isSelected = selectedCategories.includes(category.name);
-                      // ✅ FIX: count by category_name not category_id
                       const count = products.filter(p => p.category_name === category.name).length;
                       return (
                         <label key={category.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer group transition-colors">
