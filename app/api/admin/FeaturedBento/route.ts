@@ -91,3 +91,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+export async function DELETE(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
+
+  try {
+    const rank = req.nextUrl.searchParams.get("rank");
+    if (!rank) return NextResponse.json({ error: "Rank required" }, { status: 400 });
+
+    const existingItem = await prisma.featuredBento.findFirst({
+      where: { rank: Number(rank) }
+    });
+
+    if (existingItem) {
+      await prisma.featuredBento.delete({ where: { id: existingItem.id } });
+    }
+
+    return NextResponse.json({ success: true, message: "Slot cleared" });
+  } catch (error) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
