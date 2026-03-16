@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Save, Link as LinkIcon, Type, Loader2, Edit3, Trash2, Plus, Image as ImageIcon } from "lucide-react";
+import { Upload, Save, Link as LinkIcon, Type, Loader2, Edit3, Trash2, Plus, Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 
 // Define the shape of our Bento Item
@@ -46,34 +46,32 @@ export default function AdminBentoPage() {
 
   // 2. IMAGE UPLOAD (Integrated Route)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    
-    setUploading(true);
-    const file = e.target.files[0];
-    const data = new FormData();
-    data.set("file", file); // Must be 'file' to match API
+  if (!e.target.files?.[0]) return;
+  
+  setUploading(true);
+  const file = e.target.files[0];
+  const data = new FormData();
+  data.append("file", file);
+  data.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
 
-    try {
-      // Send File to the SAME route
-      const res = await fetch("/api/admin/FeaturedBento", {
-        method: "POST",
-        body: data, // Browser automatically sets Content-Type to multipart/form-data
-      });
-      
-      const result = await res.json();
-      
-      if (result.url) {
-        setFormData((prev) => ({ ...prev, image_url: result.url }));
-      } else {
-        alert("Upload failed: No URL returned");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Upload failed");
-    } finally {
-      setUploading(false);
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: "POST", body: data }
+    );
+    const result = await res.json();
+    if (result.secure_url) {
+      setFormData((prev) => ({ ...prev, image_url: result.secure_url }));
+    } else {
+      alert("Upload failed: No URL returned");
     }
-  };
+  } catch (error) {
+    console.error(error);
+    alert("Upload failed");
+  } finally {
+    setUploading(false);
+  }
+};
 
   // 3. SUBMIT DATA (Integrated Route)
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,9 +212,31 @@ export default function AdminBentoPage() {
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <Edit3 size={18} /> Editing Slot #{editingRank}
                 </h3>
-                <button onClick={() => setEditingRank(null)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500">
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+  {/* Delete slot button */}
+  <button 
+    type="button"
+    onClick={async () => {
+      if (!confirm("Clear this slot?")) return;
+      await fetch(`/api/admin/FeaturedBento?rank=${editingRank}`, { method: "DELETE" });
+      setEditingRank(null);
+      fetchItems();
+    }} 
+    className="p-2 hover:bg-red-100 rounded-full text-red-400 hover:text-red-600"
+    title="Delete slot"
+  >
+    <Trash2 size={18} />
+  </button>
+  {/* Close button */}
+  <button 
+    type="button"
+    onClick={() => setEditingRank(null)} 
+    className="p-2 hover:bg-gray-200 rounded-full text-gray-500"
+    title="Close"
+  >
+    <X size={18} />
+  </button>
+</div>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
