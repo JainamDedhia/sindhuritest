@@ -54,7 +54,7 @@ export default function HeroSection() {
       </div>
 
       {/* ================= MOBILE (Stack Carousel) ================= */}
-      <div className="block md:hidden h-[80vh] min-h-150 relative overflow-hidden bg-[#FAFAFA]">
+      <div className="block md:hidden w-full relative overflow-hidden bg-[#FAFAFA]">
         {mobileBanners.length > 0 ? (
           <MobileStackCarousel banners={mobileBanners} />
         ) : (

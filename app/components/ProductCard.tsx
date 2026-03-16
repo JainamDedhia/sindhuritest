@@ -9,7 +9,6 @@ import { useWishlistStore } from "@/app/store/wishlistStore";
 import { useUIStore } from "@/app/store/uiStore";
 import { useState } from "react";
 import OptimizedImage from "@/app/components/OptimizedImage";
-import { getProductThumbnail } from "@/lib/imageOptimizer";
 
 interface ProductProps {
   id: number | string;
@@ -133,12 +132,6 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           />
         </Link>
 
-        {/* Weight Badge - shows on hover */}
-        <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 z-10">
-          <Scale size={10} />
-          {product.weight}g
-        </div>
-
         {/* Stock Badge */}
         {!product.inStock && (
           <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] flex items-start p-3 z-10">
@@ -164,10 +157,19 @@ export default function ProductCard({ product }: { product: ProductProps }) {
       {/* CONTENT AREA */}
       <div className="p-3 md:p-4 flex flex-col flex-1">
         
-        {/* Category */}
-        <span className="text-[10px] uppercase tracking-[0.15em] text-[var(--color-gold-primary)] font-bold mb-1.5 truncate">
-          {product.category}
-        </span>
+        {/* 🔥 NEW: Category & Weight Row */}
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          {/* Category (Left) */}
+          <span className="text-[10px] uppercase tracking-[0.15em] text-[var(--color-gold-primary)] font-bold truncate">
+            {product.category}
+          </span>
+          
+          {/* Weight (Right) */}
+          <div className="flex items-center gap-1 min-w-max text-[10px] font-semibold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+            <Scale size={10} className="text-gray-400" />
+            <span>{product.weight}g</span>
+          </div>
+        </div>
 
         {/* Title */}
         <Link href={`/products/${product.id}`} className="mb-3 block flex-1">
@@ -177,28 +179,34 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         </Link>
 
         {/* BUTTONS */}
-        <div className="mt-auto flex flex-col gap-1.5">
+        {/* MOBILE & DESKTOP: Stacked Column Layout */}
+        <div className="mt-auto flex flex-col gap-2">
           
           {/* Primary: Cart */}
           {isInCart ? (
             <button
               onClick={handleViewCart}
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider bg-green-700 text-white hover:bg-green-800 transition-all duration-200 w-full"
+              className="group flex w-full items-center justify-center gap-2 py-2.5 md:py-3 rounded-xl text-[10px] md:text-[11px] font-bold uppercase tracking-widest transition-all duration-500 
+                /* Success State: Deep Forest / Teal */
+                bg-gradient-to-r from-[#0F2922] via-[#1A3F34] to-[#0F2922] bg-[length:200%_auto] hover:bg-right text-white border border-[#1A3F34] shadow-md"
             >
-              <Check size={13}/> View Cart
+              <Check size={14} className="text-[#4ADE80] group-hover:scale-110 transition-transform" /> 
+              <span className="whitespace-nowrap">View Cart</span>
             </button>
           ) : (
             <button
               onClick={handleAddToCart}
               disabled={!product.inStock || isAdding}
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider bg-gray-900 text-white hover:bg-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed w-full"
+              className="flex w-full items-center justify-center gap-2 py-2.5 md:py-3 rounded-xl text-[10px] md:text-[11px] font-bold uppercase tracking-widest transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed
+                /* Premium Deep Mahogany / Burgundy Gradient */
+                bg-gradient-to-r from-[#2A1111] via-[#4A1C1C] to-[#2A1111] bg-[length:200%_auto] hover:bg-right text-white shadow-[0_4px_15px_rgba(74,28,28,0.2)] hover:shadow-[0_4px_20px_rgba(74,28,28,0.4)] border border-[#3A1515]"
             >
               {isAdding ? (
-                <Loader2 size={13} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin text-white" />
               ) : (
                 <>
-                  <ShoppingBag size={13} />
-                  {product.inStock ? "Add to Cart" : "Sold Out"}
+                  <ShoppingBag size={14} className="text-[#C8A45D]" />
+                  <span className="whitespace-nowrap">{product.inStock ? "Add to Cart" : "Sold Out"}</span>
                 </>
               )}
             </button>
@@ -208,14 +216,17 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           <button
             onClick={handleEnquire}
             disabled={isSending}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider bg-white text-gray-700 border border-gray-200 hover:border-green-500 hover:text-green-700 hover:bg-green-50 transition-all duration-200 w-full disabled:opacity-60"
+            aria-label="Enquire on WhatsApp"
+            className="flex w-full items-center justify-center gap-2 py-2 md:py-2.5 rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:bg-[#25D366]/5 hover:border-[#25D366] shadow-[0_2px_8px_rgba(0,0,0,0.02)] disabled:opacity-60"
           >
             {isSending ? (
-              <Loader2 size={13} className="animate-spin text-green-600" />
+              <Loader2 className="animate-spin w-4 h-4 text-[#25D366]" />
             ) : (
               <>
-                <MessageCircle size={13} />
-                Whatsapp Enquiry
+                <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                <span className="text-[9px] min-[380px]:text-[10px] md:text-[11px] text-gray-700 hover:text-[#25D366] font-bold uppercase tracking-wider md:tracking-widest whitespace-nowrap transition-colors">
+                  Whatsapp
+                </span>
               </>
             )}
           </button>

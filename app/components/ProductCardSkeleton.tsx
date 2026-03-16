@@ -2,7 +2,7 @@ export default function ProductCardSkeleton() {
   return (
     <div className="relative rounded-3xl bg-white overflow-hidden">
       {/* Image Skeleton */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-neutral-200">
+      <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-neutral-200">
         <div className="absolute inset-0 skeleton-shimmer" />
       </div>
 

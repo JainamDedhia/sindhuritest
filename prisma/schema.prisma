@@ -212,3 +212,11 @@ model CampaignBento{
   image_url   String
   target_link String?
 }
+
+model StoryHighlight{
+  id          String   @id @default(cuid())
+  rank        Int      @unique
+  title       String
+  image_url   String
+  target_link String
+}

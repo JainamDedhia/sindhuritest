@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react'; // Added these icons
 
 interface Banner {
   id: string;
@@ -12,123 +13,118 @@ interface Banner {
 
 function MobileStackCarousel({ banners }: { banners: Banner[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragX = useMotionValue(0);
-  
-  const SWIPE_THRESHOLD = 50;
-  const SWIPE_VELOCITY_THRESHOLD = 0.4;
 
-  const dragRotation = useTransform(dragX, [-150, 0, 150], [10, 0, -10]);
-
+  // Auto-play timer
   useEffect(() => {
-    if (isDragging || !banners || banners.length === 0) return;
+    if (!banners || banners.length === 0) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 3000); // 🚀 FASTER: Changed from 4000ms to 3000ms
+    }, 4000); 
     return () => clearInterval(interval);
-  }, [isDragging, banners?.length]);
+  }, [banners?.length]);
 
-  const handleDragStart = () => setIsDragging(true);
+  // Button Handlers
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % banners.length);
+  };
 
-  const handleDragEnd = (event: any, info: PanInfo) => {
-    setIsDragging(false);
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
-
-    if (Math.abs(velocity) > SWIPE_VELOCITY_THRESHOLD) {
-      if (velocity > 0) setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-      else setCurrentIndex((prev) => (prev + 1) % banners.length);
-    } else if (Math.abs(offset) > SWIPE_THRESHOLD) {
-      if (offset > 0) setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-      else setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }
-
-    // 🚀 FASTER SNAP: Increased stiffness from 500 to 600
-    animate(dragX, 0, { type: 'spring', stiffness: 800, damping: 25 });
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
   if (!banners || banners.length === 0) return null;
 
   return (
-    // Kept py-6 so margins don't expand
-    <div className="flex flex-col items-center justify-center h-full w-full py-6">
-      {/* Set explicit height to hold larger cards without pushing layout */}
-      <div className="relative flex items-center justify-center h-[420px] sm:h-[480px] w-full">
+    <div className="flex flex-col items-center justify-center w-full pb-2">
+      
+      {/* Container with the requested 3.75/5 mobile aspect ratio */}
+      <div className="relative flex items-center justify-center aspect-[3.75/5] md:aspect-auto md:h-[450px] lg:h-[550px] w-full overflow-hidden bg-[#1A0A05] group">
+        
         {banners.map((banner, i) => {
           const offset = (i - currentIndex + banners.length) % banners.length;
           const adjustedOffset = offset > banners.length / 2 ? offset - banners.length : offset;
 
-          if (Math.abs(adjustedOffset) > 2) return null;
+          // Only render the current card and the ones immediately to the left/right
+          if (Math.abs(adjustedOffset) > 1) return null;
 
-          // Spread them slightly more since the cards are bigger
-          const baseX = adjustedOffset * 18; 
-          const baseRotate = adjustedOffset * 4;
-          const scale = Math.max(0.85, 1 - Math.abs(adjustedOffset) * 0.08);
-          const zIndex = 10 - Math.abs(adjustedOffset);
-          const opacity = Math.max(0.6, 1 - Math.abs(adjustedOffset) * 0.15);
           const isCenterCard = adjustedOffset === 0;
+          const baseX = `${adjustedOffset * 100}%`; 
 
           return (
             <motion.div
               key={banner.id}
-              drag={isCenterCard ? 'x' : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              style={{
-                x: isCenterCard ? dragX : baseX,
-                rotate: isCenterCard ? dragRotation : baseRotate,
-                scale,
-                zIndex,
-                opacity,
-                transformOrigin: 'bottom center',
-              }}
-              animate={!isDragging ? { x: baseX, rotate: baseRotate, scale, opacity } : undefined}
-              // 🚀 FASTER ANIMATION: Increased stiffness from 300 to 450
-              transition={{ type: 'spring', stiffness: 650, damping: 25 }}
-              
-              // 📏 BIGGER CARDS: Increased width from 70vw to 85vw and max-w from 70 (~280px) to 340px
-              className="absolute w-[85vw] max-w-85 aspect-[2.5/4] rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-grab active:cursor-grabbing will-change-transform"
+              style={{ zIndex: isCenterCard ? 10 : 0 }}
+              initial={false}
+              animate={{ x: baseX }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="absolute w-full h-full bg-black shadow-sm will-change-transform"
             >
-              <div className="relative w-full h-full select-none">
+              <div className="relative w-full h-full select-none overflow-hidden bg-black">
+                
+                {/* Cinematic Blur Background */}
+                <div 
+                  className="absolute inset-0 w-full h-full bg-cover bg-center blur-xl opacity-60 scale-110 pointer-events-none transition-all duration-700"
+                  style={{ backgroundImage: `url(${banner.image_url})` }}
+                />
+
+                {/* Un-cropped foreground image */}
                 <img
                   src={banner.image_url}
                   alt={banner.title || "Banner"}
-                  className="w-full h-full object-cover pointer-events-none"
+                  className="relative z-10 w-full h-full object-contain pointer-events-none drop-shadow-2xl"
                   draggable={false}
                 />
                 
                 {(banner.title || banner.subtitle) && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-5 text-white z-20 pointer-events-none pt-12">
-                    <h3 className="font-serif text-xl font-medium tracking-wide leading-tight">
-                        {banner.title}
-                    </h3>
-                    {banner.subtitle && (
-                      <p className="text-sm opacity-90 font-light mt-1">
-                          {banner.subtitle}
-                      </p>
-                    )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white z-20 pointer-events-none pt-20">
+                    <div className="max-w-7xl mx-auto px-4 text-center md:text-left">
+                      <h3 className="font-serif text-2xl md:text-4xl font-medium tracking-wide leading-tight drop-shadow-lg">
+                          {banner.title}
+                      </h3>
+                      {banner.subtitle && (
+                        <p className="text-sm md:text-base opacity-90 font-light mt-2 drop-shadow-md">
+                            {banner.subtitle}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-              
-              {/* Overlay Gradient for non-active cards */}
-              {!isCenterCard && <div className="absolute inset-0 bg-white/10 z-30 pointer-events-none" />}
             </motion.div>
           );
         })}
+
+        {/* Floating Navigation Buttons (Only show if there are multiple banners) */}
+        {banners.length > 1 && (
+          <>
+            <button
+              onClick={handlePrev}
+              className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 h-10 w-10 md:h-12 md:w-12 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 hover:bg-[#C8A45D] hover:border-[#C8A45D] transition-all shadow-lg opacity-80 hover:opacity-100"
+              aria-label="Previous banner"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={handleNext}
+              className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 h-10 w-10 md:h-12 md:w-12 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 hover:bg-[#C8A45D] hover:border-[#C8A45D] transition-all shadow-lg opacity-80 hover:opacity-100"
+              aria-label="Next banner"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Dots Indicator */}
-      <div className="flex justify-center gap-1.5 mt-6">
+      <div className="flex justify-center gap-2 mt-2">
         {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrentIndex(i)}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               i === currentIndex 
-                ? 'w-5 bg-[#C8A45D]' 
-                : 'w-1.5 bg-gray-200'
+                ? 'w-6 bg-[#C8A45D]' 
+                : 'w-2 bg-gray-200 hover:bg-gray-300'
             }`}
           />
         ))}

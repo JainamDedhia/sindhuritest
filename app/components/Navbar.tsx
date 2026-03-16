@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { 
-  Menu, X, ShoppingBag, Heart, User, Search, LogOut
+  Menu, X, ShoppingBag, Heart, User, Search, LogOut, House
 } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
@@ -60,7 +60,7 @@ export default function Navbar() {
         </div>
 
         {/* ================= LOGO ================= */}
-        <div className="flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 ">
+        <div className="shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 ">
             <Link href="/" className="block">
               <img
                 src="/assets/Sinduri_Logo.PNG" 
@@ -80,11 +80,11 @@ export default function Navbar() {
                   key={item}
                   href={`/${item.toLowerCase()}`}
                   className={`relative text-xs font-bold uppercase tracking-[0.15em] transition-colors duration-200
-                    ${isActive(`/${item.toLowerCase()}`) ? "text-[var(--color-gold-primary)]" : "text-gray-600 hover:text-black"}`}
+                    ${isActive(`/${item.toLowerCase()}`) ? "text-(--color-gold-primary)" : "text-gray-600 hover:text-black"}`}
                 >
                   {item}
                   {isActive(`/${item.toLowerCase()}`) && (
-                    <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-[var(--color-gold-primary)]" />
+                    <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-(--color-gold-primary)" />
                   )}
                 </Link>
               ))}
@@ -113,7 +113,7 @@ export default function Navbar() {
                 <Link href="/cart" className="relative group text-gray-500 hover:text-black transition-colors">
                   <ShoppingBag size={20} className="group-hover:scale-105 transition-transform" />
                   {mounted && isAuthenticated && cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-[var(--color-gold-primary)] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+                    <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-(--color-gold-primary) text-white text-[9px] font-bold flex items-center justify-center rounded-full">
                       {cartCount}
                     </span>
                   )}
@@ -126,11 +126,11 @@ export default function Navbar() {
                       <img 
                         src={session.user?.image || "https://ui-avatars.com/api/?background=random&name=" + session.user?.name} 
                         alt="Profile" 
-                        className="h-8 w-8 rounded-full border border-gray-200 hover:border-[var(--color-gold-primary)] transition-colors object-cover"
+                        className="h-8 w-8 rounded-full border border-gray-200 hover:border-(--color-gold-primary) transition-colors object-cover"
                       />
                     </button>
                   ) : (
-                    <Link href="/auth/login" className="flex items-center justify-center h-8 w-8 rounded-full bg-black text-white hover:bg-[var(--color-gold-primary)] transition-colors">
+                    <Link href="/auth/login" className="flex items-center justify-center h-8 w-8 rounded-full bg-black text-white hover:bg-(--color-gold-primary) transition-colors">
                        <User size={16} />
                     </Link>
                   )}
@@ -175,12 +175,16 @@ export default function Navbar() {
       >
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
-          
+         <Link href="/"
+         className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors"
+         onClick={() => setIsMobileMenuOpen(false)}>
+          <House size={18}/> Home
+         </Link> 
           
 
           <Link
             href="/products"
-            className="flex items-center gap-3 py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <ShoppingBag size={18} /> Shop Collection
@@ -189,7 +193,7 @@ export default function Navbar() {
           {/* 🔥 MOBILE WISHLIST - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/wishlist"
-            className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="flex items-center gap-3">
@@ -205,14 +209,14 @@ export default function Navbar() {
           {/* 🔥 MOBILE CART - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/cart"
-            className="flex items-center justify-between py-2 hover:text-[var(--color-gold-primary)] transition-colors"
+            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="flex items-center gap-3">
               <ShoppingBag size={18} /> My Cart
             </span>
             {mounted && isAuthenticated && cartCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-gold-primary)] text-[10px] font-bold text-white">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--color-gold-primary) text-[10px] font-bold text-white">
                 {cartCount}
               </span>
             )}
@@ -222,7 +226,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/profile"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-[var(--color-gold-primary)] transition-colors"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <User size={18} /> My Profile
@@ -237,7 +241,7 @@ export default function Navbar() {
           ) : (
             <Link
                 href="/auth/login"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-[var(--color-gold-primary)] transition-colors"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <User size={18} /> Login / Register
