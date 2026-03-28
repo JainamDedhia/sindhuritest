@@ -1,76 +1,48 @@
 "use client";
 
-import { Crown, PenTool, ShieldCheck, Clock } from "lucide-react";
+import { Crown, PenTool, ShieldCheck, Clock, MapPin, Phone, Mail, FileText } from "lucide-react";
 
 export default function AboutPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-[#FDFBF7] min-h-screen selection:bg-(--color-gold-primary) selection:text-white">
       
-      {/* ================= 1. HERO SECTION ================= */}
-      {/* A moody, full-width banner that sets the tone */}
-      <div className="relative h-[60vh] w-full overflow-hidden bg-gray-900">
-        <img
-          src="https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?q=80&w=2070&auto=format&fit=crop"
-          alt="Jewelry Craftsmanship"
-          className="h-full w-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-          <h1 className="font-serif text-4xl font-medium text-white md:text-6xl">
-            Sinduri Jewellers
-          </h1>
-          <div className="mt-4 h-1 w-16 bg-[var(--color-gold-primary)]" />
-          <p className="mt-6 max-w-2xl text-lg text-gray-200 md:text-xl font-light tracking-wide">
-            Where heritage meets modern grace. Crafting timeless pieces that celebrate your most precious moments since 1995.
+      {/* ================= 1. HERO / TITLE ================= */}
+      <section className="pt-24 pb-12 md:pt-32 md:pb-16 px-6 text-center">
+        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-gray-900 tracking-tight">
+          About Sinduri Jewellers
+        </h1>
+        <div className="mx-auto mt-6 h-1 w-20 bg-linear-to-r from-transparent via-(--color-gold-primary) to-transparent opacity-70" />
+      </section>
+
+      {/* ================= 2. OUR STORY (Typography Focused) ================= */}
+      <section className="mx-auto max-w-3xl px-6 pb-20 text-center md:text-left">
+        <div className="space-y-8 text-base md:text-lg text-gray-700 leading-relaxed font-light">
+          <p className="first-letter:float-left first-letter:text-6xl first-letter:font-serif first-letter:text-(--color-gold-primary) first-letter:leading-[0.2]">
+            Sinduri Jewellers was built with a clear vision. To become a name people trust not just once, but over time. Today, it stands for consistency, commitment, and values that have remained unchanged.
           </p>
-        </div>
-      </div>
-
-
-      {/* ================= 2. OUR STORY (Split Layout) ================= */}
-      <section className="mx-auto max-w-7xl px-6 py-20 lg:px-12">
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
           
-          {/* Left: Text Content */}
-          <div className="space-y-6">
-            <h2 className="font-serif text-3xl text-gray-900 md:text-4xl">
-              A Legacy of Purity
-            </h2>
-            <p className="text-gray-600 leading-relaxed">
-              Sinduri Jewellers is a legacy brand built over more than 50 years, rooted in values that have stood strong across generations.
-            </p>
-            <p className="text-gray-600 leading-relaxed">
-              Established in 1975, Sinduri Jewellers was created with a clear purpose. To build a jewellery business based on trust, long-term relationships, and uncompromised standards. The name Sinduri was chosen thoughtfully. Sindur represents tradition, purity, and lifelong commitment. These values define the brand to this day.
-            </p>
-            
-            {/* Signature / Quote */}
-            <div className="border-l-4 border-[var(--color-gold-primary)] pl-6 pt-2 italic text-gray-700">
-              "Sabse Achha. Sabse Sasta."
-            </div>
+          <p>
+            What truly defines Sinduri is its clarity in pricing and approach. Jewellery here is not made to feel complicated. It is presented in a way that is easy to understand and fair to buy. Concepts like <span className="font-medium text-gray-900 border-b border-(--color-gold-primary)/40 pb-0.5">5555, 6666, and 7777 per gram</span> were introduced with this same thinking. To offer well-made jewellery at prices that make sense, without compromising on quality.
+          </p>
+
+          <p>
+            At Sinduri Jewellers, purity and transparency are never adjusted. Every piece goes through careful selection, with attention to finish, weight, and overall balance. It reflects a responsibility towards the trust customers place in the brand.
+          </p>
+
+          <div className="py-6 my-8 border-y border-gray-200/60 text-center">
+            <span className="font-serif text-2xl text-(--color-gold-primary) italic">
+              "The approach remains simple. To grow steadily, to serve more people, and to stay true to what the brand stands for."
+            </span>
           </div>
 
-          {/* Right: Image Grid */}
-          <div className="relative grid grid-cols-2 gap-4">
-            <img 
-              src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0" 
-              className="h-64 w-full rounded-2xl object-cover shadow-lg translate-y-8" // Offset effect
-              alt="Gold Necklaces"
-            />
-            <img 
-              src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a" 
-              className="h-64 w-full rounded-2xl object-cover shadow-lg"
-              alt="Craftsmanship"
-            />
-            {/* Decorative Gold Box behind */}
-            <div className="absolute -right-4 -top-4 -z-10 h-32 w-32 rounded-xl bg-[var(--color-gold-primary)]/10" />
-            <div className="absolute -left-4 -bottom-4 -z-10 h-32 w-32 rounded-xl bg-[var(--color-gold-primary)]/10" />
-          </div>
-
+          <p className="text-center font-medium text-gray-900">
+            Sinduri Jewellers goes beyond jewellery. It carries a sense of trust that continues.
+          </p>
         </div>
       </section>
 
-
-      {/* ================= 3. OUR VALUES (Cards) ================= */}
-      <section className="bg-gray-50 py-20">
+      {/* ================= 3. OUR VALUES (Text Cards) ================= */}
+      <section className="bg-white py-20 border-y border-gray-100">
         <div className="mx-auto max-w-7xl px-6 lg:px-12 text-center">
           <h2 className="font-serif text-3xl text-gray-900 mb-12">Why Choose Sinduri?</h2>
           
@@ -91,47 +63,113 @@ export default function AboutPage() {
                 title: "Transparent Pricing", 
                 desc: "No hidden charges. We pride ourselves on honest making charges and policies." 
               },
-              { 
-                icon: Clock, 
-                title: "Lifetime Exchange", 
-                desc: "We stand by our quality. Enjoy hassle-free exchange policies on all gold items." 
-              },
             ].map((feature, i) => (
-              <div key={i} className="group rounded-xl bg-white p-8 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-gold-primary)]/10 text-[var(--color-gold-primary)] group-hover:bg-[var(--color-gold-primary)] group-hover:text-white transition-colors">
+              <div key={i} className="group rounded-xl bg-[#FDFBF7] p-8 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 border border-gray-100">
+                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-(--color-gold-primary)/10 text-(--color-gold-primary) group-hover:bg-(--color-gold-primary) group-hover:text-white transition-colors">
                   <feature.icon size={28} />
                 </div>
                 <h3 className="mb-3 text-lg font-semibold text-gray-900">{feature.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ================= 4. OUR STORES ================= */}
+      <section className="mx-auto max-w-7xl px-6 py-20 lg:px-12">
+        <div className="text-center mb-16">
+          <h2 className="font-serif text-3xl text-gray-900 md:text-4xl">Our Stores</h2>
+          <p className="mt-4 text-gray-600">Visit us to experience our collections in person.</p>
+        </div>
 
-      {/* ================= 4. FOUNDER / CTA SECTION ================= */}
-      <section className="mx-auto max-w-5xl px-6 py-20 text-center">
-        <h2 className="font-serif text-3xl text-gray-900 md:text-4xl">
-          Visit Our Store
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-          Photographs can only capture so much. Come experience the weight, the shine, and the detail of our collections in person.
-        </p>
-        
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a
-            href="/contact"
-            className="rounded-full bg-gray-900 px-8 py-3.5 text-sm font-medium text-white transition hover:bg-black"
-          >
-            Get Directions
-          </a>
-          <a
-            href="/products"
-            className="rounded-full border border-gray-200 bg-white px-8 py-3.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50"
-          >
-            Browse Collection
-          </a>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          {/* Store 1: Bazar Peth */}
+          <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm border border-gray-200 hover:border-(--color-gold-primary)/50 transition-colors">
+            <h3 className="font-serif text-xl font-medium text-gray-900 mb-6 flex items-center gap-2">
+              <MapPin className="text-(--color-gold-primary)" size={24} />
+              Parnaka, Bhiwandi
+            </h3>
+            
+            <div className="space-y-4 text-sm text-gray-600 flex-1">
+              <p className="leading-relaxed">
+                <strong className="text-gray-900">Bazar Peth Branch:</strong><br />
+                Shop No. 9, Laxmi Narayan Shopping Centre, Parnaka Road, Bazar Peth, Bhiwandi, Maharashtra 421302.
+              </p>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <Phone size={16} className="text-gray-400" />
+                <a href="tel:+919067454309" className="hover:text-(--color-gold-primary) transition-colors">+91 90674 54309</a>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <FileText size={16} className="text-gray-400" />
+                <span>GSTIN: 27AAQPJ9586Q1ZC</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Mail size={16} className="text-gray-400" />
+                <a href="mailto:sindurijewellers272@gmail.com" className="hover:text-(--color-gold-primary) transition-colors break-all">sindurijewellers272@gmail.com</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Store 2: Bhaji Market */}
+          <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm border border-gray-200 hover:border-(--color-gold-primary)/50 transition-colors">
+            <h3 className="font-serif text-xl font-medium text-gray-900 mb-6 flex items-center gap-2">
+              <MapPin className="text-(--color-gold-primary)" size={24} />
+              Bhaji Market, Bhiwandi
+            </h3>
+            
+            <div className="space-y-4 text-sm text-gray-600 flex-1">
+              <p className="leading-relaxed">
+                <strong className="text-gray-900">Bhaji Market Branch:</strong><br />
+                Gala No. 2 & 3, Building No. 85, Platinum Plaza, Thange Alley, Bhaji Market Road, Bhiwandi, Maharashtra 421308.
+              </p>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <Phone size={16} className="text-gray-400" />
+                <a href="tel:+917385855553" className="hover:text-(--color-gold-primary) transition-colors">+91 73858 55553</a>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <FileText size={16} className="text-gray-400" />
+                <span>GSTIN: 27AAQPJ9586Q1ZC</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Mail size={16} className="text-gray-400" />
+                <a href="mailto:sindurijewellers272@gmail.com" className="hover:text-(--color-gold-primary) transition-colors break-all">sindurijewellers272@gmail.com</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Store 3: Zaveri Bazaar */}
+          <div className="flex flex-col rounded-2xl bg-gray-900 p-8 shadow-sm border border-gray-800 text-gray-300">
+            <h3 className="font-serif text-xl font-medium text-white mb-6 flex items-center gap-2">
+              <MapPin className="text-(--color-gold-primary)" size={24} />
+              Zaveri Bazaar, Mumbai
+            </h3>
+            
+            <div className="space-y-4 text-sm flex-1">
+              <p className="leading-relaxed">
+                <strong className="text-white">Backend & Wholesale Office:</strong><br />
+                Maitri Bhawan, Agiary 3rd Lane, Khara Kuva, Mandvi, Zaveri Bazaar, Mumbai, Maharashtra 400003.
+              </p>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <Phone size={16} className="text-(--color-gold-primary)" />
+                <a href="tel:+919860557666" className="hover:text-white transition-colors">+91 98605 57666</a>
+              </div>
+              
+              <div className="flex items-center gap-3 mt-auto">
+                <Mail size={16} className="text-(--color-gold-primary)" />
+                <a href="mailto:sindurijewellers272@gmail.com" className="hover:text-white transition-colors break-all">sindurijewellers272@gmail.com</a>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 

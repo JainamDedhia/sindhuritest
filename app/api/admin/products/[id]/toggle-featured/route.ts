@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 import { toggleProductFeatured } from "@/app/lib/dal/products";
-import { NextRequest } from "next/server";
 import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 export async function PATCH(

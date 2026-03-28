@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createProduct } from "@/app/lib/dal/products";
+import { createProduct, deleteProduct } from "@/app/lib/dal/products";
 import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 /* ================= GET (PUBLIC) ================= */

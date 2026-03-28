@@ -6,31 +6,31 @@ import { useEffect, useRef, useState } from "react";
 const VIDEO_REVIEWS = [
   {
     id: 1,
-    customer: "Meera & Rohan",
-    location: "Wedding, Udaipur",
+    customer: "Shakuntala Ganna",
+    location: "Mysore, Karnataka",
     youtubeId: "Awki2C9V0Xk",
-    quote: "The bridal set was the highlight of my look.",
+    quote: "Best Service, Best Collection",
   },
   {
     id: 2,
-    customer: "Sanya Malhotra",
-    location: "Festive Edit",
+    customer: "Rupesh kathe",
+    location: "Bhiwandi, Maharashtra",
     youtubeId: "fvqk6-t7Kuk",
-    quote: "Obsessed with the detailing on these bangles!",
+    quote: "Genuine Price and Real Offers",
   },
   {
     id: 3,
-    customer: "Ishita Raj",
-    location: "Engagement",
+    customer: "Santosh",
+    location: "Navi Mumbai",
     youtubeId: "xPoHT0ZNtic",
-    quote: "Found the perfect diamond ring here.",
+    quote: "Only Hallmark products, 100% Quality Product",
   },
   {
     id: 4,
-    customer: "Aarav & Family",
-    location: "Gifting",
+    customer: "Bhumi Jain",
+    location: "California, USA",
     youtubeId: "jTMw-ACKSJg",
-    quote: "The best gold purity and service in town.",
+    quote: "Complete service by staff and took advantage of 7777/ gm offer",
   },
 ];
 

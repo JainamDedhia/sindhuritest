@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
 // ============= GET SETTING =============
-export async function getSetting(key: string): Promise<string | null> {
-  const setting = await prisma.setting.findUnique({
-    where: { key }
+export async function getSetting(key: string) {
+  return await prisma.setting.findUnique({
+    where: {key}
   });
 
-  return setting?.value || null;
 }
 
 // ============= SET SETTING =============
@@ -19,9 +18,14 @@ export async function setSetting(key: string, value: string): Promise<void> {
 }
 
 // ============= GET GOLD RATE =============
-export async function getGoldRate(): Promise<string> {
-  const rate = await getSetting('gold_rate');
-  return rate || "7000"; // Default fallback
+export async function getGoldRate() {
+  const setting = await getSetting('gold_rate');
+
+  if(!setting){
+    return {value: "7000", updatedAt: new Date()};
+  }
+  return setting; 
+  // Default fallback
 }
 
 // ============= SET GOLD RATE =============

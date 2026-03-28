@@ -105,7 +105,9 @@ export default function CampaignBento() {
                 </div>
               </Link>
             )}
+
           </div>
+            <div className="text-gray-400 block w-full text-center mt-4 text-sm md:text-base font-medium leading-relaxed tracking-wide ">Finer Detailing and Best Finishing, har Piece mein best quality and best work.</div>
         </div>
       </div>
     </section>

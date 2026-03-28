@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { 
-  Menu, X, ShoppingBag, Heart, User, Search, LogOut, House
+  Menu, X, ShoppingBag, Heart, User, Search, LogOut, House, Handshake, Gem
 } from "lucide-react";
 import { useCartStore } from "@/app/store/cartStore";
 import { useWishlistStore } from "@/app/store/wishlistStore";
@@ -230,6 +230,21 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <User size={18} /> My Profile
+              </Link>
+              <Link 
+                href="/about"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Gem size={18} />About Us
+              </Link>
+
+              <Link 
+                href="/wholesale"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Handshake size={18} />Wholesale Details
               </Link>
               <button
                 onClick={handleSignOut}

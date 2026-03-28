@@ -77,21 +77,3 @@ export async function PUT(
     return NextResponse.json({ error: "Update failed", details: error.message }, { status: 500 });
   }
 }
-
-/* ================= DELETE (ADMIN ONLY) ================= */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await requireAdmin(req);
-  if (!admin.authenticated) return createUnauthorizedResponse(admin.error ?? undefined);
-
-  try {
-    const { id } = await params;
-    await deleteProduct(id);
-    return NextResponse.json({ success: true, message: "Product deleted" });
-  } catch (error: any) {
-    console.error("DELETE ERROR:", error.message);
-    return NextResponse.json({ error: "Delete Failed", details: error.message }, { status: 500 });
-  }
-}

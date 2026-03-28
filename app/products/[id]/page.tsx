@@ -315,18 +315,6 @@ export default function ProductDetailsPage() {
                      </div>
                   </div>
                </AccordionItem>
-
-               <AccordionItem 
-                 title="Shipping & Returns" 
-                 isOpen={expandedSection === 'shipping'} 
-                 onClick={() => setExpandedSection(expandedSection === 'shipping' ? null : 'shipping')}
-               >
-                  <div className="text-sm text-gray-600 space-y-2">
-                     <p>• <strong>Free Insured Shipping:</strong> On all orders above ₹50,000.</p>
-                     <p>• <strong>Dispatch:</strong> Ships within 24-48 hours of order confirmation.</p>
-                     <p>• <strong>Returns:</strong> 7-day easy return policy if product tag is intact.</p>
-                  </div>
-               </AccordionItem>
             </div>
 
             {/* Trust Badges */}

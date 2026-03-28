@@ -60,7 +60,7 @@ export default function Footer() {
                 { name: "Collections", href: "/products" },
                 { name: "About Us", href: "/about" },
                 { name: "Contact", href: "/contact" },
-                { name: "Privacy Policy", href: "/privacy" },
+                { name: "Wholesale Details", href: "/wholesale" },
               ].map((item) => (
                 <li key={item.name}>
                   <Link 

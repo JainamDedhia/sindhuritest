@@ -116,6 +116,11 @@ export default function FeaturedCollection() {
           )}
         </div>
 
+        <div className="block w-full text-center text-gray-500 mt-4 text-sm md:text-base font-medium leading-relaxed tracking-wide">
+          Designs our customers come back for.
+Chosen for how they look, and how they feel.
+        </div>
+
         {/* ========================================= */}
         {/* CENTERED 'VIEW ALL' BUTTON (All screens) */}
         {/* ========================================= */}

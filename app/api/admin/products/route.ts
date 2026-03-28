@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-import { getAllProductsAdmin } from "@/app/lib/dal/products";
+import { NextResponse,NextRequest } from "next/server";
+import { deleteProduct, getAllProductsAdmin } from "@/app/lib/dal/products";
 import { requireAdmin, createUnauthorizedResponse } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -14,3 +13,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
   }
 }
+

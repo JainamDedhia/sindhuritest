@@ -119,7 +119,8 @@ export default function CategoryBento() {
              ))}
           </div>
         )}
-
+        <span className="block w-full text-center text-gray-500 text-sm md:text-base font-medium leading-relaxed tracking-wide mt-4">सोच-समझकर चुने गए डिज़ाइन। <br />
+हर आभूषण में कारीगरी और सही मूल्य।</span>
         <div className="mt-4 text-center pb-8 border-b border-gray-100">
            <Link 
              href="/products" 

@@ -122,7 +122,7 @@ export default function FeaturedBento() {
 
       {/* Footer Link */}
       <div className="text-center mt-10 md:mt-12">
-        <Link href="/products" className="inline-flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#5E4B4B] hover:text-black transition-colors opacity-70 hover:opacity-100">
+        <Link href="/products" className="inline-flex items-center gap-2 text-[12px] md:text-xs font-bold uppercase tracking-widest text-[#5E4B4B] hover:text-black transition-colors opacity-70 hover:opacity-100">
            View All Collections <ArrowRight size={12} />
         </Link>
       </div>
