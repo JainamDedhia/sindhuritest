@@ -45,7 +45,7 @@ export default function Navbar() {
   const isAuthenticated = status === "authenticated";
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+    <nav className="sticky top-0 z-50 w-full bg-[#610C04] backdrop-blur-md border-b border-gray-100 transition-all duration-300">
       
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
         
@@ -53,7 +53,7 @@ export default function Navbar() {
         <div className="flex items-center md:hidden">
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 -ml-2 text-gray-700 hover:bg-gray-100 rounded-md transition"
+              className="p-2 -ml-2 text-white hover:text-gray-200 rounded-md transition"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -80,7 +80,7 @@ export default function Navbar() {
                   key={item}
                   href={`/${item.toLowerCase()}`}
                   className={`relative text-xs font-bold uppercase tracking-[0.15em] transition-colors duration-200
-                    ${isActive(`/${item.toLowerCase()}`) ? "text-(--color-gold-primary)" : "text-gray-600 hover:text-black"}`}
+                    ${isActive(`/${item.toLowerCase()}`) ? "text-(--color-gold-primary)" : "text-gray-50 hover:text-(--color-gold-primary)"}`}
                 >
                   {item}
                   {isActive(`/${item.toLowerCase()}`) && (
@@ -100,7 +100,7 @@ export default function Navbar() {
             <div className="flex items-center gap-4 md:border-l md:border-gray-200 md:pl-6 h-6">
                 
                 {/* 🔥 WISHLIST - ONLY SHOW BADGE WHEN AUTHENTICATED */}
-                <Link href="/wishlist" className="relative group text-gray-500 hover:text-black transition-colors hidden md:block">
+                <Link href="/wishlist" className="relative group text-white hover:text-black transition-colors hidden md:block">
                   <Heart size={20} className="group-hover:scale-105 transition-transform" />
                   {mounted && isAuthenticated && wishlistCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full">
@@ -111,7 +111,7 @@ export default function Navbar() {
 
                 {/* 🔥 CART - ONLY SHOW BADGE WHEN AUTHENTICATED */}
                 <Link href="/cart" className="relative group text-gray-500 hover:text-black transition-colors">
-                  <ShoppingBag size={20} className="group-hover:scale-105 transition-transform" />
+                  <ShoppingBag size={20} className="group-hover:scale-105 transition-transform text-white" />
                   {mounted && isAuthenticated && cartCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-(--color-gold-primary) text-white text-[9px] font-bold flex items-center justify-center rounded-full">
                       {cartCount}
@@ -168,7 +168,7 @@ export default function Navbar() {
       {/* ================= MOBILE MENU ================= */}
       <div
         className={`
-          absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl md:hidden
+          absolute top-full left-0 w-full bg-[#610C04] border-b border-gray-100 shadow-xl md:hidden
           transition-all duration-300 ease-in-out origin-top z-40
           ${isMobileMenuOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-5 invisible pointer-events-none"}
         `}
@@ -176,7 +176,7 @@ export default function Navbar() {
         <div className="flex flex-col p-4 space-y-4 font-medium text-gray-900">
           
          <Link href="/"
-         className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors"
+         className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors text-white"
          onClick={() => setIsMobileMenuOpen(false)}>
           <House size={18}/> Home
          </Link> 
@@ -184,7 +184,7 @@ export default function Navbar() {
 
           <Link
             href="/products"
-            className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors"
+            className="flex items-center gap-3 py-2 hover:text-(--color-gold-primary) transition-colors text-white"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <ShoppingBag size={18} /> Shop Collection
@@ -193,7 +193,7 @@ export default function Navbar() {
           {/* 🔥 MOBILE WISHLIST - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/wishlist"
-            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors"
+            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors text-white"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="flex items-center gap-3">
@@ -209,7 +209,7 @@ export default function Navbar() {
           {/* 🔥 MOBILE CART - ONLY SHOW COUNT WHEN AUTHENTICATED */}
           <Link
             href="/cart"
-            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors"
+            className="flex items-center justify-between py-2 hover:text-(--color-gold-primary) transition-colors text-white"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="flex items-center gap-3">
@@ -222,18 +222,9 @@ export default function Navbar() {
             )}
           </Link>
 
-          {session ? (
-            <>
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User size={18} /> My Profile
-              </Link>
-              <Link 
+          <Link 
                 href="/about"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Gem size={18} />About Us
@@ -241,14 +232,25 @@ export default function Navbar() {
 
               <Link 
                 href="/wholesale"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Handshake size={18} />Wholesale Details
               </Link>
+
+          {session ? (
+            <>
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors text-white"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User size={18} /> My Profile
+              </Link>
+              
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-3 py-2 text-red-600 hover:text-red-700 transition-colors"
+                className="flex items-center gap-3 py-2 text-red-100 hover:text-red-700 transition-colors"
               >
                 <LogOut size={18} /> Sign Out
               </button>
@@ -256,7 +258,7 @@ export default function Navbar() {
           ) : (
             <Link
                 href="/auth/login"
-                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors"
+                className="flex items-center gap-3 py-2 border-t border-gray-100 pt-4 hover:text-(--color-gold-primary) transition-colors text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <User size={18} /> Login / Register

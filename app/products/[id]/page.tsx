@@ -310,8 +310,6 @@ export default function ProductDetailsPage() {
                      
                      <div className="mt-4 grid grid-cols-2 gap-y-2 text-gray-500">
                         <span>Product Code:</span> <span className="text-gray-900">{product.product_code}</span>
-                        <span>Purity:</span> <span className="text-gray-900">22K / 18K (Standard)</span>
-                        <span>Certified:</span> <span className="text-gray-900">BIS Hallmarked</span>
                      </div>
                   </div>
                </AccordionItem>

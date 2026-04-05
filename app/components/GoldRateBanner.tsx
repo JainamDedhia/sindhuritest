@@ -45,7 +45,7 @@ export default function GoldRateBanner() {
       <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-500" />
       
       {/* Back to a sleeker height (h-10 mobile, h-12 desktop) */}
-      <div className="container mx-auto h-10 md:h-12 flex items-center justify-center gap-2 md:gap-6 px-2 text-sm relative z-10 w-full overflow-x-auto no-scrollbar">
+      <div className="container mx-auto h-12 md:h-14 flex items-center justify-center gap-2 md:gap-6 px-2 text-sm relative z-10 w-full overflow-x-auto no-scrollbar">
         
         {/* Animated Sparkle Icon (Left) */}
         <Sparkles 
